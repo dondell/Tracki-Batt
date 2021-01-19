@@ -3,19 +3,24 @@ package com.ami.batterwatcher.data;
 import android.content.Context;
 
 import androidx.annotation.NonNull;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
 import androidx.sqlite.db.SupportSQLiteDatabase;
 
 import com.ami.batterwatcher.viewmodels.AlertModel;
+import com.ami.batterwatcher.viewmodels.ChargeModel;
+import com.ami.batterwatcher.viewmodels.PercentageModel;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-@Database(entities = {AlertModel.class}, version = 1)
+@Database(entities = {AlertModel.class, ChargeModel.class, PercentageModel.class}, version = 1)
 public abstract class AppDatabase extends RoomDatabase {
     public abstract AlertDao userDao();
+    public abstract ChargeDao chargeDao();
+    public abstract PercentageDao percentageDao();
 
     private static volatile AppDatabase INSTANCE;
     private static final int NUMBER_OF_THREADS = 4;
@@ -53,6 +58,11 @@ public abstract class AppDatabase extends RoomDatabase {
                         3, "Battery level is now", "Test Alert",
                         "This is just a test");
                 dao.insert(alertModel);*/
+
+                ChargeDao chargeDao = INSTANCE.chargeDao();
+                chargeDao.deleteAll();
+                chargeDao.insert(new ChargeModel(1, "Charging"));
+                chargeDao.insert(new ChargeModel(2, "Dis-charging"));
             });
         }
     };

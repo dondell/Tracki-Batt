@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+        <variable
+            name="item"
+            type="com.ami.batterwatcher.viewmodels.AlertModel" />
+
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/_60sdp"
+        android:background="?android:attr/selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true"
+        android:paddingTop="@dimen/_4sdp"
+        android:paddingBottom="@dimen/_4sdp">
+
+        <ImageView
+            android:id="@+id/imageView_icon1"
+            android:layout_width="@dimen/_30sdp"
+            android:layout_height="@dimen/_30sdp"
+            android:layout_marginStart="@dimen/_10sdp"
+            android:layout_marginLeft="@dimen/_10sdp"
+            android:background="@drawable/circle_blue"
+            android:padding="@dimen/_6sdp"
+            android:src="@{item.event == 1 ? @drawable/ic_baseline_play_arrow_24: item.event == 2 ? @drawable/ic_baseline_music_note_24 : @drawable/ic_baseline_surround_sound_24}"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:src="@drawable/ic_baseline_surround_sound_24" />
+
+        <TextView
+            android:id="@+id/textView_text1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="8dp"
+            android:text="Charging"
+            android:textColor="@color/black"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toTopOf="@+id/textView_text2"
+            app:layout_constraintLeft_toRightOf="@+id/imageView_icon1"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/textView_text2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="8dp"
+            android:text=">="
+            android:textColor="@color/green"
+            app:layout_constraintBottom_toTopOf="@+id/textView_text3"
+            app:layout_constraintLeft_toRightOf="@+id/imageView_icon1"
+            app:layout_constraintTop_toBottomOf="@+id/textView_text1" />
+
+        <TextView
+            android:id="@+id/textView_eventValue"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginLeft="8dp"
+            android:text="@{item.eventString}"
+            app:layout_constraintBottom_toTopOf="@+id/textView_text3"
+            app:layout_constraintEnd_toStartOf="@+id/imageView_icon2"
+            app:layout_constraintLeft_toRightOf="@+id/imageView_icon1"
+            app:layout_constraintStart_toEndOf="@+id/textView_text2"
+            app:layout_constraintTop_toBottomOf="@+id/textView_text1"
+            app:layout_constraintVertical_bias="0.6"
+            tools:text="xxx" />
+
+        <TextView
+            android:id="@+id/textView_text3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="8dp"
+            android:text="@{item.description}"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toRightOf="@+id/imageView_icon1"
+            app:layout_constraintTop_toBottomOf="@+id/textView_text2"
+            tools:text="Text to speech" />
+
+        <ImageView
+            android:id="@+id/imageView_icon2"
+            android:layout_width="@dimen/_30sdp"
+            android:layout_height="@dimen/_30sdp"
+            android:layout_marginStart="@dimen/_10sdp"
+            android:layout_marginLeft="@dimen/_10sdp"
+            android:layout_marginEnd="@dimen/_10sdp"
+            android:layout_marginRight="@dimen/_10sdp"
+            android:background="@drawable/circle_orange"
+            android:padding="@dimen/_4sdp"
+            android:src="@drawable/ic_baseline_battery_charging_full_24"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

@@ -5,9 +5,11 @@
 
     <data>
 
+        <import type="android.view.View" />
+
         <variable
-            name="alert"
-            type="com.ami.batterwatcher.viewmodels.AlertModel" />
+            name="chargeModel"
+            type="com.ami.batterwatcher.viewmodels.ChargeModel" />
     </data>
 
     <ScrollView
@@ -32,115 +34,125 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
-            <RadioGroup
-                android:id="@+id/radioGroup_1"
-                android:layout_width="match_parent"
+            <LinearLayout
+                android:id="@+id/linearLayout_settings"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/_15sdp"
-                android:layout_marginLeft="@dimen/_15sdp"
-                android:layout_marginEnd="@dimen/_15sdp"
-                android:layout_marginRight="@dimen/_15sdp"
+                android:orientation="vertical"
+                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/textView_text1">
 
-                <RadioButton
-                    android:id="@+id/radioButton_plugged"
+                <TextView
+                    android:id="@+id/textView_mode"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="PLUGGED"
-                    android:visibility="gone" />
+                    android:layout_marginLeft="@dimen/_8sdp"
+                    android:layout_marginRight="@dimen/_8sdp"
+                    android:textColor="@color/blue_700"
+                    tools:text="Charging" />
 
-                <RadioButton
-                    android:id="@+id/radioButton_unplugged"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="UNPLUGGED"
-                    android:visibility="gone" />
-
-                <RadioButton
-                    android:id="@+id/radioButton_chargingLevel"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="CHARGING LEVEL" />
-
-                <LinearLayout
-                    android:id="@+id/linearLayout_chargingLevel"
+                <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:visibility="gone"
-                    tools:visibility="visible">
+                    android:layout_marginLeft="@dimen/_8sdp"
+                    android:layout_marginRight="@dimen/_8sdp"
+                    android:gravity="center_horizontal"
+                    android:textAlignment="center"
+                    android:textColor="@color/gray"
+                    tools:text="Choose percentage below to be alerted:" />
 
-                    <TextView
-                        android:id="@+id/textView_chargingLevelLogic"
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="@dimen/_8sdp"
+                    android:layout_marginRight="@dimen/_8sdp"
+                    android:orientation="horizontal">
+
+                    <CheckBox
+                        android:id="@+id/checkbox_97"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginLeft="8dp"
-                        android:text="&gt;="
-                        android:textStyle="bold" />
+                        android:text="97%" />
 
-                    <EditText
-                        android:id="@+id/editText_chargingValue"
-                        android:layout_width="0dp"
+                    <CheckBox
+                        android:id="@+id/checkbox_90"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:hint="value"
-                        android:inputType="number"
-                        android:text="@{alert.mode == 3 ? `` + alert.modeValue: ``}"
-                        android:textColor="@color/black"
-                        tools:text="0" />
+                        android:text="90%" />
 
-                    <Button
-                        android:layout_width="0dp"
+                    <CheckBox
+                        android:id="@+id/checkbox_80"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="%" />
+                        android:text="80%" />
+
+                    <CheckBox
+                        android:id="@+id/checkbox_70"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="70%" />
+
+                    <CheckBox
+                        android:id="@+id/checkbox_60"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="60%" />
+
+                    <CheckBox
+                        android:id="@+id/checkbox_50"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="50%" />
 
                 </LinearLayout>
 
-                <RadioButton
-                    android:id="@+id/radioButton_dischargingLevel"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="DISCHARGING LEVEL" />
-
                 <LinearLayout
-                    android:id="@+id/linearLayout_dischargingLevel"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:visibility="gone"
-                    tools:visibility="visible">
+                    android:layout_marginLeft="@dimen/_8sdp"
+                    android:layout_marginRight="@dimen/_8sdp"
+                    android:orientation="horizontal">
 
-                    <TextView
-                        android:id="@+id/textView_dischargingLevelLogic"
+                    <CheckBox
+                        android:id="@+id/checkbox_40"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginLeft="8dp"
-                        android:text="&lt;="
-                        android:textStyle="bold" />
+                        android:text="40%" />
 
-                    <EditText
-                        android:id="@+id/editText_dischargingValue"
-                        android:layout_width="0dp"
+                    <CheckBox
+                        android:id="@+id/checkbox_30"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:hint="value"
-                        android:inputType="number"
-                        android:text="@{alert.mode == 4 ? `` + alert.modeValue: ``}"
-                        android:textColor="@color/black"
-                        tools:text="0" />
+                        android:text="30%" />
 
-                    <Button
-                        android:layout_width="0dp"
+                    <CheckBox
+                        android:id="@+id/checkbox_20"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="%" />
+                        android:text="20%" />
+
+                    <CheckBox
+                        android:id="@+id/checkbox_10"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="10%" />
+
+                    <CheckBox
+                        android:id="@+id/checkbox_7"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="7%" />
+
+                    <CheckBox
+                        android:id="@+id/checkbox_3"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="3%" />
 
                 </LinearLayout>
-            </RadioGroup>
+
+            </LinearLayout>
 
             <TextView
                 android:id="@+id/textView_event"
@@ -151,7 +163,7 @@
                 android:textColor="@color/blue_700"
                 android:textStyle="bold"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/radioGroup_1" />
+                app:layout_constraintTop_toBottomOf="@id/linearLayout_settings" />
 
             <RadioGroup
                 android:id="@+id/radioGroup_2"
@@ -169,6 +181,7 @@
                     android:id="@+id/radioButton_media"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:checked="@{chargeModel.event == 1 ? true : false}"
                     android:text="MEDIA" />
 
                 <LinearLayout
@@ -177,7 +190,7 @@
                     android:layout_height="wrap_content"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
-                    android:visibility="gone"
+                    android:visibility="@{chargeModel.event == 1 ? View.VISIBLE : View.GONE}"
                     tools:visibility="visible">
 
                     <EditText
@@ -187,7 +200,7 @@
                         android:layout_weight="1"
                         android:editable="false"
                         android:hint="Select Media"
-                        android:text="@{alert.event == 1 ? alert.eventString: ``}"
+                        android:text="@{chargeModel.event == 1 ? chargeModel.eventString: ``}"
                         android:textColor="@color/black"
                         tools:text="0" />
 
@@ -203,6 +216,7 @@
                     android:id="@+id/radioButton_ringtone"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:checked="@{chargeModel.event == 2 ? true : false}"
                     android:text="RINGTONE" />
 
                 <LinearLayout
@@ -211,7 +225,7 @@
                     android:layout_height="wrap_content"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
-                    android:visibility="gone"
+                    android:visibility="@{chargeModel.event == 2 ? View.VISIBLE : View.GONE}"
                     tools:visibility="visible">
 
                     <Button
@@ -219,7 +233,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="@{alert.event == 2 ? alert.eventString: `Select Ringtone`}" />
+                        android:text="@{chargeModel.event == 2 ? chargeModel.eventString: `Select Ringtone`}" />
 
                 </LinearLayout>
 
@@ -227,6 +241,7 @@
                     android:id="@+id/radioButton_textToSpeech"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:checked="@{chargeModel.event == 3 ? true : false}"
                     android:text="TEXT TO SPEECH" />
 
                 <LinearLayout
@@ -235,7 +250,7 @@
                     android:layout_height="wrap_content"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
-                    android:visibility="gone"
+                    android:visibility="@{chargeModel.event == 3 ? View.VISIBLE : View.GONE}"
                     tools:visibility="visible">
 
                     <EditText
@@ -244,68 +259,12 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:hint="Enter text"
-                        android:text="@{alert.event == 3 ? alert.eventString: ``}"
+                        android:text="@{chargeModel.event == 3 ? chargeModel.eventString: ``}"
                         android:textColor="@color/black"
                         tools:text="" />
 
                 </LinearLayout>
             </RadioGroup>
-
-
-            <TextView
-                android:id="@+id/textView_text2"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="8dp"
-                android:text="General"
-                android:textColor="@color/blue_700"
-                android:textStyle="bold"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/radioGroup_2" />
-
-            <TextView
-                android:id="@+id/textView_text3"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="@dimen/_8sdp"
-                android:layout_marginRight="@dimen/_8sdp"
-                android:text="Name"
-                android:textColor="@color/blue_700"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/textView_text2" />
-
-            <EditText
-                android:id="@+id/editText_1"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="@dimen/_8sdp"
-                android:layout_marginRight="@dimen/_8sdp"
-                android:text="@{alert.name}"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/textView_text3" />
-
-            <TextView
-                android:id="@+id/textView_text4"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="@dimen/_8sdp"
-                android:layout_marginTop="@dimen/_8sdp"
-                android:layout_marginRight="@dimen/_8sdp"
-                android:text="Description"
-                android:textColor="@color/blue_700"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/editText_1" />
-
-            <EditText
-                android:id="@+id/editText_description"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="@dimen/_8sdp"
-                android:layout_marginRight="@dimen/_8sdp"
-                android:text="@{alert.description}"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/textView_text4" />
-
 
         </androidx.constraintlayout.widget.ConstraintLayout>
     </ScrollView>

@@ -4,6 +4,8 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.os.BatteryManager;
+import android.os.Build;
 import android.speech.tts.TextToSpeech;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -23,9 +25,13 @@ import com.ami.batterwatcher.R;
 import com.ami.batterwatcher.adapters.AlertListAdapter;
 import com.ami.batterwatcher.base.BaseActivity;
 import com.ami.batterwatcher.data.AlertViewModel;
+import com.ami.batterwatcher.data.ChargeViewModel;
 import com.ami.batterwatcher.databinding.ActivityMainBinding;
 import com.ami.batterwatcher.service.BatteryService;
 import com.ami.batterwatcher.viewmodels.AlertModel;
+import com.ami.batterwatcher.viewmodels.ChargeModel;
+import com.ami.batterwatcher.viewmodels.ChargeWithPercentageModel;
+import com.ami.batterwatcher.viewmodels.PercentageModel;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,13 +41,17 @@ public class MainActivity extends BaseActivity {
 
     private ActivityMainBinding viewDataBinding;
     private AlertViewModel viewModel;
+    private ChargeViewModel chargeViewModel;
     private RecyclerView recyclerView_list;
     private AlertListAdapter listAdapter;
     private List<AlertModel> models;
+    private List<ChargeModel> chargeModels;
+    private List<ChargeWithPercentageModel> chargeWithPercentageModels;
     private BroadcastReceiver mBatInfoReceiver;
     private boolean initSuccessfull = false;
     private TextToSpeech tts;
     private int rawLevel;
+    private BatteryManager myBatteryManager;
 
     @Override
     protected int setLayout() {
@@ -60,7 +70,10 @@ public class MainActivity extends BaseActivity {
     protected void setData() {
         // Get a new or existing ViewModel from the ViewModelProvider.
         viewModel = new ViewModelProvider(this).get(AlertViewModel.class);
+        chargeViewModel = new ViewModelProvider(this).get(ChargeViewModel.class);
         models = new ArrayList<>();
+        chargeModels = new ArrayList<>();
+        chargeWithPercentageModels = new ArrayList<>();
         listAdapter = new AlertListAdapter(this, models, new AlertListAdapter.ClickListener() {
             @Override
             public void onClick(int position) {
@@ -105,6 +118,7 @@ public class MainActivity extends BaseActivity {
         mBatInfoReceiver = new BroadcastReceiver();
         final IntentFilter intentFilter = new IntentFilter("YourAction");
         LocalBroadcastManager.getInstance(this).registerReceiver(mBatInfoReceiver, intentFilter);
+        myBatteryManager = (BatteryManager) mContext.getSystemService(Context.BATTERY_SERVICE);
 
         initSuccessfull = false;
         tts = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
@@ -122,6 +136,28 @@ public class MainActivity extends BaseActivity {
             public void onClick(View view) {
                 Intent settingsIntent = new Intent(MainActivity.this, SettingsActivity.class);
                 startActivity(settingsIntent);
+            }
+        });
+
+        viewDataBinding.includeCharging.getRoot().setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent addIntent = new Intent(MainActivity.this, AlertDetailsActivity.class);
+                addIntent.putExtra("screen_type", 3);
+                if (chargeModels.size() > 0)
+                    addIntent.putExtra("data", chargeModels.get(0));
+                startActivity(addIntent);
+            }
+        });
+
+        viewDataBinding.includeDischarging.getRoot().setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent addIntent = new Intent(MainActivity.this, AlertDetailsActivity.class);
+                addIntent.putExtra("screen_type", 4);
+                if (chargeModels.size() > 0)
+                    addIntent.putExtra("data", chargeModels.get(1));
+                startActivity(addIntent);
             }
         });
     }
@@ -169,6 +205,14 @@ public class MainActivity extends BaseActivity {
             models.addAll(alertModels);
             listAdapter.notifyDataSetChanged();
         });
+        chargeViewModel.getAll().observe(this, list -> {
+            chargeModels.clear();
+            chargeModels.addAll(list);
+        });
+        chargeViewModel.getAllChargeWithPercentageSets().observe(this, list2 -> {
+            chargeWithPercentageModels.clear();
+            chargeWithPercentageModels.addAll(list2);
+        });
     }
 
     @Override
@@ -201,19 +245,39 @@ public class MainActivity extends BaseActivity {
 
     private void checkRulesOnTheList() {
         boolean ttsWasPlayed = false;
-        for (AlertModel a : models) {
-            if (ttsWasPlayed)
-                return;
-            if (a.mode == 3 || a.mode == 4) {
+        boolean isCharging = false;
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (myBatteryManager.isCharging()) {
+                isCharging = true;
+            }
+        } else if (isCharging(mContext)) {
+            isCharging = true;
+        }
+
+        if (chargeWithPercentageModels.size() == 0)
+            return;
+
+        if (isCharging) {
+            ChargeWithPercentageModel cp = chargeWithPercentageModels.get(0);
+            for (PercentageModel p : cp.percentageModels) {
+                if (ttsWasPlayed)
+                    return;
                 //Charging level
-                if (a.mode == 3 && rawLevel >= a.modeValue) {
+                if (p.percentage >= rawLevel && p.percentage <= p.percentage) {
                     ttsWasPlayed = true;
-                    playTTS(a.eventString);
+                    playTTS(cp.chargeModel.eventString);
                 }
-                //Dis-charging level
-                if (a.mode == 4 && a.modeValue <= rawLevel) {
+            }
+        } else {
+            ChargeWithPercentageModel cp = chargeWithPercentageModels.get(1);
+            for (PercentageModel p : cp.percentageModels) {
+                if (ttsWasPlayed)
+                    return;
+                //Discharging level
+                if (p.percentage >= rawLevel && p.percentage <= p.percentage) {
                     ttsWasPlayed = true;
-                    playTTS(a.eventString);
+                    playTTS(cp.chargeModel.eventString);
                 }
             }
         }
@@ -221,8 +285,14 @@ public class MainActivity extends BaseActivity {
 
     private void playTTS(String tell) {
         tts.setLanguage(Locale.US);
-        tts.speak(tell, TextToSpeech.QUEUE_ADD, null);
+        tts.speak(tell + " " + rawLevel, TextToSpeech.QUEUE_ADD, null);
         log("playTTS");
+    }
+
+    public static boolean isCharging(Context context) {
+        Intent intent = context.registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+        int plugged = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
+        return plugged == BatteryManager.BATTERY_PLUGGED_AC || plugged == BatteryManager.BATTERY_PLUGGED_USB || plugged == BatteryManager.BATTERY_PLUGGED_WIRELESS;
     }
 
 }

@@ -15,7 +15,7 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 public class BatteryService extends Service {
 
-    private static final int CHECK_BATTERY_INTERVAL = 60000; //1 minute
+    private static final int CHECK_BATTERY_INTERVAL = 10000; //1 minute
 
     private double batteryLevel;
     private Handler handler;
