@@ -12,134 +12,290 @@
             type="java.lang.Boolean" />
     </data>
 
-    <ScrollView
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/lightgray"
+        android:background="@mipmap/bg"
         tools:context=".view.MainActivity">
 
-        <androidx.constraintlayout.widget.ConstraintLayout
+        <View
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_margin="@dimen/_8sdp"
-            android:background="@color/white">
+            android:layout_height="match_parent"
+            android:background="@drawable/default_gradient_bg" />
 
-            <TextView
-                android:id="@+id/textView_text1"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="8dp"
-                android:layout_marginTop="@dimen/_15sdp"
-                android:text="Sleep Mode"
-                android:textColor="@color/blue_700"
-                android:textStyle="bold"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-
-            <TextView
-                android:id="@+id/textView_text2"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="8dp"
-                android:layout_marginTop="@dimen/_4sdp"
-                android:text="Set a service suspension interval"
-                android:textColor="@color/gray"
-                android:textSize="@dimen/_8sdp"
-                android:textStyle="bold"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/textView_text1" />
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            tools:context=".view.MainActivity">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/_15sdp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:padding="@dimen/_8sdp"
-                app:layout_constraintTop_toBottomOf="@+id/textView_text2">
+                android:layout_marginBottom="@dimen/_30sdp"
+                android:orientation="vertical">
 
-                <ImageView
-                    android:id="@+id/imageView_icon1"
-                    android:layout_width="@dimen/_30sdp"
-                    android:layout_height="@dimen/_30sdp"
-                    android:layout_marginStart="@dimen/_10sdp"
-                    android:layout_marginLeft="@dimen/_10sdp"
-                    android:background="@{isSleepmodeEnable ? @drawable/circle_blue: @drawable/circle_gray}"
-                    android:padding="@dimen/_6sdp"
-                    android:src="@{isSleepmodeEnable ? @drawable/ic_baseline_access_alarm_24 : @drawable/ic_baseline_alarm_off_24}"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    tools:background="@drawable/circle_blue"
-                    tools:src="@drawable/ic_baseline_access_alarm_24" />
-
-                <LinearLayout
-                    android:layout_width="0dp"
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:id="@+id/constrait_one"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/_15sdp"
-                    android:layout_marginLeft="@dimen/_15sdp"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
+                    android:layout_margin="@dimen/_8sdp"
+                    android:background="@color/white">
+
+                    <TextView
+                        android:id="@+id/textView_text1"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="8dp"
+                        android:layout_marginTop="@dimen/_15sdp"
+                        android:text="Sleep Mode"
+                        android:textColor="@color/black"
+                        android:textStyle="bold"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                    <TextView
+                        android:id="@+id/textView_text2"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="8dp"
+                        android:layout_marginTop="@dimen/_4sdp"
+                        android:text="Set a service suspension interval"
+                        android:textColor="@color/black"
+                        android:textSize="@dimen/_8sdp"
+                        android:textStyle="bold"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/textView_text1" />
 
                     <LinearLayout
-                        android:id="@+id/linearLayout_startTime"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal">
+                        android:layout_marginTop="@dimen/_15sdp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:padding="@dimen/_8sdp"
+                        app:layout_constraintTop_toBottomOf="@+id/textView_text2">
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Start"
-                            android:textAllCaps="true"
-                            android:textColor="@color/black" />
+                        <ImageView
+                            android:id="@+id/imageView_icon1"
+                            android:layout_width="@dimen/_30sdp"
+                            android:layout_height="@dimen/_30sdp"
+                            android:layout_marginStart="@dimen/_10sdp"
+                            android:layout_marginLeft="@dimen/_10sdp"
+                            android:background="@{isSleepmodeEnable ? @drawable/circle_blue: @drawable/circle_gray}"
+                            android:padding="@dimen/_6sdp"
+                            android:src="@{isSleepmodeEnable ? @drawable/ic_baseline_access_alarm_24 : @drawable/ic_baseline_alarm_off_24}"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent"
+                            tools:background="@drawable/circle_blue"
+                            tools:src="@drawable/ic_baseline_access_alarm_24" />
 
-                        <TextView
-                            android:id="@+id/textView_startTime"
-                            android:layout_width="wrap_content"
+                        <LinearLayout
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
+                            android:layout_marginStart="@dimen/_15sdp"
+                            android:layout_marginLeft="@dimen/_15sdp"
                             android:layout_weight="1"
-                            android:gravity="end"
-                            android:text=""
-                            android:textAlignment="textEnd"
-                            android:textAllCaps="true"
-                            android:textColor="@color/gray"
-                            tools:text="11:30 AM" />
+                            android:gravity="center"
+                            android:orientation="horizontal">
+
+                            <LinearLayout
+                                android:id="@+id/linearLayout_startTime"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginEnd="@dimen/_4sdp"
+                                android:layout_marginRight="@dimen/_4sdp"
+                                android:layout_weight="1"
+                                android:orientation="horizontal">
+
+                                <com.ami.batterwatcher.ui.CustomBoldTV
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Start: "
+                                    android:textAllCaps="true"
+                                    android:textColor="@color/black" />
+
+                                <TextView
+                                    android:id="@+id/textView_startTime"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:gravity="start"
+                                    android:text=""
+                                    android:textAllCaps="true"
+                                    android:textColor="@color/black"
+                                    tools:text="11:30 AM" />
+                            </LinearLayout>
+
+                            <LinearLayout
+                                android:id="@+id/linearLayout_endTime"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginEnd="@dimen/_4sdp"
+                                android:layout_marginRight="@dimen/_4sdp"
+                                android:layout_weight="1"
+                                android:orientation="horizontal">
+
+                                <com.ami.batterwatcher.ui.CustomBoldTV
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="stop: "
+                                    android:textAllCaps="true"
+                                    android:textColor="@color/black" />
+
+                                <TextView
+                                    android:id="@+id/textView_endTime"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:gravity="start"
+                                    android:text=""
+                                    android:textAllCaps="true"
+                                    android:textColor="@color/black"
+                                    tools:text="12:30 PM" />
+                            </LinearLayout>
+
+                        </LinearLayout>
+
                     </LinearLayout>
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="@dimen/_8sdp"
+                    android:background="@color/white">
+
+                    <TextView
+                        android:id="@+id/textView_audiolabel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="8dp"
+                        android:layout_marginTop="@dimen/_15sdp"
+                        android:text="Audio"
+                        android:textColor="@color/black"
+                        android:textStyle="bold"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
 
                     <LinearLayout
-                        android:id="@+id/linearLayout_endTime"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/_10sdp"
-                        android:orientation="horizontal">
+                        android:gravity="center_vertical"
+                        android:orientation="vertical"
+                        android:padding="@dimen/_8sdp"
+                        app:layout_constraintTop_toBottomOf="@+id/textView_audiolabel">
 
-                        <TextView
-                            android:layout_width="wrap_content"
+                        <CheckBox
+                            android:id="@+id/checkbox_audioProfile"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="end"
-                            android:textAllCaps="true"
+                            android:text="Ignore system audio profile\n(Play sound in silent, vibrate mode"
                             android:textColor="@color/black" />
 
-                        <TextView
-                            android:id="@+id/textView_endTime"
-                            android:layout_width="wrap_content"
+                        <CheckBox
+                            android:id="@+id/checkbox_playMaxVolume"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:gravity="end"
-                            android:text=""
-                            android:textAlignment="textEnd"
-                            android:textAllCaps="true"
-                            android:textColor="@color/gray"
-                            tools:text="12:30 PM" />
+                            android:text="Play sound with max volume"
+                            android:textColor="@color/black" />
+
+                        <CheckBox
+                            android:id="@+id/checkbox_disableDuringCall"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Disable during call"
+                            android:textColor="@color/black" />
                     </LinearLayout>
 
-                </LinearLayout>
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="@dimen/_8sdp"
+                    android:background="@color/white">
+
+                    <TextView
+                        android:id="@+id/textView_text5"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="8dp"
+                        android:layout_marginTop="@dimen/_15sdp"
+                        android:text="Task"
+                        android:textColor="@color/black"
+                        android:textStyle="bold"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                    <TextView
+                        android:id="@+id/textView_text4"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="8dp"
+                        android:layout_marginTop="@dimen/_4sdp"
+                        android:text="Set Interval in minutes"
+                        android:textColor="@color/black"
+                        android:textSize="@dimen/_8sdp"
+                        android:textStyle="bold"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/textView_text5" />
+
+                    <LinearLayout
+                        android:id="@+id/linearLayout_interval"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:padding="@dimen/_8sdp"
+                        app:layout_constraintTop_toBottomOf="@+id/textView_text4">
+
+                        <com.ami.batterwatcher.ui.CustomEditText
+                            android:id="@+id/editText_interval"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="@dimen/_10sdp"
+                            android:layout_marginLeft="@dimen/_10sdp"
+                            android:layout_weight="1"
+                            android:background="@drawable/edit_text_bg"
+                            android:inputType="number"
+                            android:padding="10dp"
+                            android:textColor="@color/black"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent" />
+
+                        <Button
+                            android:id="@+id/button_interval"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="@dimen/_15sdp"
+                            android:layout_marginLeft="@dimen/_15sdp"
+                            android:layout_weight="1"
+                            android:background="@drawable/button_selector"
+                            android:orientation="vertical"
+                            android:text="Set"
+                            android:textColor="@color/white" />
+
+                    </LinearLayout>
+
+                    <CheckBox
+                        android:id="@+id/checkbox_enableNotificationSoundRepetition"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/_8sdp"
+                        android:layout_marginLeft="@dimen/_8sdp"
+                        android:text="Enable notification sound repetition"
+                        android:textColor="@color/black"
+                        app:layout_constraintTop_toBottomOf="@+id/linearLayout_interval" />
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
 
             </LinearLayout>
+        </ScrollView>
 
-        </androidx.constraintlayout.widget.ConstraintLayout>
-    </ScrollView>
-
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </layout>

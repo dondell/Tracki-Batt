@@ -93,7 +93,7 @@
             android:layout_marginLeft="@dimen/_10sdp"
             android:layout_marginEnd="@dimen/_10sdp"
             android:layout_marginRight="@dimen/_10sdp"
-            android:background="@drawable/circle_orange"
+            android:background="@drawable/circle_green"
             android:padding="@dimen/_4sdp"
             android:src="@drawable/ic_baseline_battery_charging_full_24"
             app:layout_constraintBottom_toBottomOf="parent"

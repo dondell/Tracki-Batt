@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <layer-list>
+            <item>
+                <shape>
+                    <solid android:color="?attr/trip_spinner_bg"/>
+                    <stroke
+                            android:width="@dimen/_1sdp"
+                            android:color="?attr/trip_spinner_bg">
+                    </stroke>
+                    <corners
+                            android:radius="6dp">
+                    </corners>
+
+                </shape>
+            </item>
+            <item>
+                <bitmap android:gravity="right|center" android:src="@drawable/ic_down"
+                    android:tint="?attr/image_tint_color"/>
+            </item>
+        </layer-list>
+    </item>
+</selector>

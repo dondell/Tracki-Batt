@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <declare-styleable name="DividerView">
+        <attr name="color" format="color" />
+        <attr name="dashLength" format="dimension" />
+        <attr name="dashGap" format="dimension" />
+        <attr name="dashThickness" format="dimension" />
+        <attr name="orientation" format="enum">
+            <enum name="horizontal" value="0" />
+            <enum name="vertical" value="1" />
+        </attr>
+    </declare-styleable>
+
+    <attr name="image_tint_color" format="reference"/>
+    <attr name="registeration_instruction_bg" format="reference"/>
+    <declare-styleable name="color_view">
+        <attr name="ic_info_tint" format="reference"/>
+    </declare-styleable>
+    <attr name="ic_reverse_tint" format="reference"/>
+    <attr name="tower_tint" format="reference"/>
+    <attr name="round_corner_bg_solid" format="reference"/>
+    <attr name="device_desc_card_bg" format="reference"/>
+    <attr name="circle_white_bg" format="reference"/>
+    <attr name="red_circle_bg" format="reference"/>
+    <attr name="device_desc_card_black_bg" format="reference"/>
+    <attr name="login_button_text_color" format="reference"/>
+    <attr name="default_gradient_bg_start" format="reference"/>
+    <attr name="default_gradient_bg_end" format="reference"/>
+    <attr name="gradient_bg_start" format="reference"/>
+    <attr name="gradient_bg_end" format="reference"/>
+    <attr name="green_btn_black_stroke_bg" format="reference"/>
+    <attr name="green_btn_white_stroke_bg" format="reference"/>
+    <attr name="progressbar_tint" format="reference"/>
+    <attr name="side_menu_image_size_attr" format="reference"/>
+    <attr name="fence_bottom_sheet_solid_bg" format="reference"/>
+    <attr name="trip_spinner_bg" format="reference"/>
+    <attr name="round_corner_bg_stroke" format="reference"/>
+    <attr name="spin_kit_color" format="reference"/>
+    <attr name="bottom_nav_bg" format="reference"/>
+    <attr name="zone_bg" format="reference"/>
+    <attr name="custom_view_bg" format="reference"/>
+    <attr name="text_no_background" format="reference"/>
+    <attr name="text_no_background_ligther_color" format="reference"/>
+
+    <declare-styleable name="TimelineView" >
+        <attr name="marker" format="color|reference"/>
+        <attr name="markerSize" format="dimension"/>
+        <attr name="markerPaddingLeft" format="dimension"/>
+        <attr name="markerPaddingTop" format="dimension"/>
+        <attr name="markerPaddingRight" format="dimension"/>
+        <attr name="markerPaddingBottom" format="dimension"/>
+        <attr name="markerInCenter" format="boolean"/>
+        <attr name="startLineColor" format="color"/>
+        <attr name="endLineColor" format="color"/>
+        <attr name="lineWidth" format="dimension"/>
+        <attr name="lineStyle" format="enum">
+            <enum name="normal" value="0" />
+            <enum name="dash" value="1" />
+        </attr>
+        <attr name="lineStyleDashGap" format="dimension" />
+        <attr name="lineStyleDashLength" format="dimension" />
+        <attr name="lineOrientation" format="enum">
+            <enum name="horizontal" value="0"/>
+            <enum name="vertical" value="1"/>
+        </attr>
+        <attr name="linePadding" format="dimension"/>
+    </declare-styleable>
+
+    <declare-styleable name="CircleAlarmTimerView">
+        <attr name="circleColor" format="color" />
+        <attr name="lineColor" format="color" />
+        <attr name="timerColonColor" format="color" />
+        <attr name="timerTextColor" format="color" />
+    </declare-styleable>
+
+    <declare-styleable name="Picker">
+        <attr name="canvasColor" format="color" />
+        <attr name="clockColor" format="color" />
+        <attr name="textColor" format="color" />
+        <attr name="dialColor" format="color" />
+        <attr name="hourFormat" format="boolean" />
+        <attr name="trackSize" format="dimension" />
+        <attr name="shitSize" format="dimension" />
+        <attr name="dialRadius" format="dimension" />
+    </declare-styleable>
+
+    <declare-styleable name="CircleSeekBar">
+        <attr name="csb_progress" format="integer"/>
+        <attr name="csb_min" format="integer"/>
+        <attr name="csb_max" format="integer"/>
+        <attr name="csb_step" format="integer"/>
+        <attr name="csb_thumbDrawable" format="reference"/>
+        <attr name="csb_thumbSize" format="dimension" />
+        <attr name="csb_progressColor" format="color"/>
+        <attr name="csb_progressWidth" format="dimension"/>
+        <attr name="csb_arcColor" format="color"/>
+        <attr name="csb_arcWidth" format="dimension"/>
+        <attr name="csb_textSize" format="dimension"/>
+        <attr name="csb_textColor" format="color"/>
+        <attr name="csb_isShowText" format="boolean" />
+
+    </declare-styleable>
+
+    <declare-styleable name="SwipeRevealLayout">
+        <attr name="dragEdge">
+            <flag name="left" value="1" />
+            <flag name="right" value="2" />
+            <flag name="top" value="4" />
+            <flag name="bottom" value="8" />
+        </attr>
+
+        <attr name="mode">
+            <enum name="normal" value="0" />
+            <enum name="same_level"   value="1" />
+        </attr>
+
+        <attr name="flingVelocity" format="integer" />
+
+        <attr name="minDistRequestDisallowParent" format="dimension" />
+    </declare-styleable>
+</resources>

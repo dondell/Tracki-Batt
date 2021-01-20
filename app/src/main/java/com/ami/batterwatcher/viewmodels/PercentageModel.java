@@ -13,6 +13,7 @@ public class PercentageModel implements Parcelable {
     public int percentage;
     public int chargeModelId;
     public boolean selected;
+    public boolean doneAlerted;
 
     public PercentageModel() {
     }
@@ -29,6 +30,7 @@ public class PercentageModel implements Parcelable {
         percentage = in.readInt();
         chargeModelId = in.readInt();
         selected = in.readByte() != 0;
+        doneAlerted = in.readByte() != 0;
     }
 
     @Override
@@ -37,6 +39,7 @@ public class PercentageModel implements Parcelable {
         dest.writeInt(percentage);
         dest.writeInt(chargeModelId);
         dest.writeByte((byte) (selected ? 1 : 0));
+        dest.writeByte((byte) (doneAlerted ? 1 : 0));
     }
 
     @Override

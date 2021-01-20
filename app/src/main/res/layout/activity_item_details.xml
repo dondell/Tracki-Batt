@@ -12,262 +12,364 @@
             type="com.ami.batterwatcher.viewmodels.ChargeModel" />
     </data>
 
-    <ScrollView
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/white"
+        android:background="@mipmap/bg"
         tools:context=".view.MainActivity">
 
-        <androidx.constraintlayout.widget.ConstraintLayout
+        <View
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="match_parent"
+            android:background="@drawable/default_gradient_bg" />
 
-            <TextView
-                android:id="@+id/textView_text1"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="8dp"
-                android:layout_marginTop="@dimen/_15sdp"
-                android:text="Mode"
-                android:textColor="@color/blue_700"
-                android:textStyle="bold"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            tools:context=".view.MainActivity">
 
-            <LinearLayout
-                android:id="@+id/linearLayout_settings"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/textView_text1">
-
-                <TextView
-                    android:id="@+id/textView_mode"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginLeft="@dimen/_8sdp"
-                    android:layout_marginRight="@dimen/_8sdp"
-                    android:textColor="@color/blue_700"
-                    tools:text="Charging" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginLeft="@dimen/_8sdp"
-                    android:layout_marginRight="@dimen/_8sdp"
-                    android:gravity="center_horizontal"
-                    android:textAlignment="center"
-                    android:textColor="@color/gray"
-                    tools:text="Choose percentage below to be alerted:" />
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginLeft="@dimen/_8sdp"
-                    android:layout_marginRight="@dimen/_8sdp"
-                    android:orientation="horizontal">
-
-                    <CheckBox
-                        android:id="@+id/checkbox_97"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="97%" />
-
-                    <CheckBox
-                        android:id="@+id/checkbox_90"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="90%" />
-
-                    <CheckBox
-                        android:id="@+id/checkbox_80"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="80%" />
-
-                    <CheckBox
-                        android:id="@+id/checkbox_70"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="70%" />
-
-                    <CheckBox
-                        android:id="@+id/checkbox_60"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="60%" />
-
-                    <CheckBox
-                        android:id="@+id/checkbox_50"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="50%" />
-
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginLeft="@dimen/_8sdp"
-                    android:layout_marginRight="@dimen/_8sdp"
-                    android:orientation="horizontal">
-
-                    <CheckBox
-                        android:id="@+id/checkbox_40"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="40%" />
-
-                    <CheckBox
-                        android:id="@+id/checkbox_30"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="30%" />
-
-                    <CheckBox
-                        android:id="@+id/checkbox_20"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="20%" />
-
-                    <CheckBox
-                        android:id="@+id/checkbox_10"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="10%" />
-
-                    <CheckBox
-                        android:id="@+id/checkbox_7"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="7%" />
-
-                    <CheckBox
-                        android:id="@+id/checkbox_3"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="3%" />
-
-                </LinearLayout>
-
-            </LinearLayout>
-
-            <TextView
-                android:id="@+id/textView_event"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="8dp"
-                android:text="Event"
-                android:textColor="@color/blue_700"
-                android:textStyle="bold"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/linearLayout_settings" />
-
-            <RadioGroup
-                android:id="@+id/radioGroup_2"
+            <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/_15sdp"
-                android:layout_marginLeft="@dimen/_15sdp"
-                android:layout_marginEnd="@dimen/_15sdp"
-                android:layout_marginRight="@dimen/_15sdp"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/textView_event">
+                android:layout_height="wrap_content">
 
-
-                <RadioButton
-                    android:id="@+id/radioButton_media"
+                <TextView
+                    android:id="@+id/textView_text1"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:checked="@{chargeModel.event == 1 ? true : false}"
-                    android:text="MEDIA" />
+                    android:layout_marginLeft="8dp"
+                    android:layout_marginTop="@dimen/_15sdp"
+                    android:text="Mode"
+                    android:textColor="@color/white"
+                    android:textStyle="bold"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
 
                 <LinearLayout
-                    android:id="@+id/linearLayout_media"
-                    android:layout_width="match_parent"
+                    android:id="@+id/linearLayout_settings"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:visibility="@{chargeModel.event == 1 ? View.VISIBLE : View.GONE}"
-                    tools:visibility="visible">
+                    android:orientation="vertical"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/textView_text1">
 
-                    <EditText
-                        android:id="@+id/editText_media"
-                        android:layout_width="0dp"
+                    <TextView
+                        android:id="@+id/textView_mode"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:editable="false"
-                        android:hint="Select Media"
-                        android:text="@{chargeModel.event == 1 ? chargeModel.eventString: ``}"
-                        android:textColor="@color/black"
-                        tools:text="0" />
+                        android:layout_marginLeft="@dimen/_8sdp"
+                        android:layout_marginRight="@dimen/_8sdp"
+                        android:textColor="@color/white"
+                        tools:text="Charging" />
 
-                    <Button
-                        android:layout_width="0dp"
+                    <TextView
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="File Explorer" />
+                        android:layout_marginLeft="@dimen/_8sdp"
+                        android:layout_marginTop="@dimen/_15sdp"
+                        android:layout_marginRight="@dimen/_8sdp"
+                        android:gravity="center_horizontal"
+                        android:text="Choose percentage below to be alerted:"
+                        android:textAlignment="center"
+                        android:textColor="@color/white" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:layout_marginLeft="@dimen/_8sdp"
+                        android:layout_marginRight="@dimen/_8sdp"
+                        android:gravity="center_horizontal"
+                        android:orientation="horizontal">
+
+                        <CheckBox
+                            android:id="@+id/checkbox_100"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:buttonTint="?attr/image_tint_color"
+                            android:text="100%"
+                            android:textColor="@color/white"
+                            android:textSize="@dimen/_15sdp" />
+
+                        <CheckBox
+                            android:id="@+id/checkbox_95"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:buttonTint="?attr/image_tint_color"
+                            android:text="95%"
+                            android:textColor="@color/white"
+                            android:visibility="gone" />
+
+                        <CheckBox
+                            android:id="@+id/checkbox_90"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:buttonTint="?attr/image_tint_color"
+                            android:text="90%"
+                            android:textColor="@color/white"
+                            android:textSize="@dimen/_15sdp" />
+
+                        <CheckBox
+                            android:id="@+id/checkbox_80"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:buttonTint="?attr/image_tint_color"
+                            android:text="80%"
+                            android:textColor="@color/white"
+                            android:textSize="@dimen/_15sdp" />
+
+                        <CheckBox
+                            android:id="@+id/checkbox_70"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:buttonTint="?attr/image_tint_color"
+                            android:text="70%"
+                            android:textColor="@color/white"
+                            android:textSize="@dimen/_15sdp" />
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:layout_marginLeft="@dimen/_8sdp"
+                        android:layout_marginRight="@dimen/_8sdp"
+                        android:gravity="center_horizontal"
+                        android:orientation="horizontal">
+
+                        <CheckBox
+                            android:id="@+id/checkbox_60"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:buttonTint="?attr/image_tint_color"
+                            android:text="60%"
+                            android:textColor="@color/white"
+                            android:textSize="@dimen/_15sdp" />
+
+                        <CheckBox
+                            android:id="@+id/checkbox_50"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:buttonTint="?attr/image_tint_color"
+                            android:text="50%"
+                            android:textColor="@color/white"
+                            android:textSize="@dimen/_15sdp" />
+
+                        <CheckBox
+                            android:id="@+id/checkbox_40"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:buttonTint="?attr/image_tint_color"
+                            android:text="40%"
+                            android:textColor="@color/white"
+                            android:textSize="@dimen/_15sdp" />
+
+                        <CheckBox
+                            android:id="@+id/checkbox_30"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:buttonTint="?attr/image_tint_color"
+                            android:text="30%"
+                            android:textColor="@color/white"
+                            android:textSize="@dimen/_15sdp" />
+
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:layout_marginLeft="@dimen/_8sdp"
+                        android:layout_marginRight="@dimen/_8sdp"
+                        android:gravity="center_horizontal"
+                        android:orientation="horizontal">
+
+                        <CheckBox
+                            android:id="@+id/checkbox_20"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:buttonTint="?attr/image_tint_color"
+                            android:text="20%"
+                            android:textColor="@color/white"
+                            android:textSize="@dimen/_15sdp" />
+
+                        <CheckBox
+                            android:id="@+id/checkbox_10"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:buttonTint="?attr/image_tint_color"
+                            android:text="10%"
+                            android:textColor="@color/white"
+                            android:textSize="@dimen/_15sdp" />
+
+                        <CheckBox
+                            android:id="@+id/checkbox_7"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:buttonTint="?attr/image_tint_color"
+                            android:text="7%"
+                            android:textColor="@color/white"
+                            android:textSize="@dimen/_15sdp" />
+
+                        <CheckBox
+                            android:id="@+id/checkbox_3"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:buttonTint="?attr/image_tint_color"
+                            android:text="3%"
+                            android:textColor="@color/white"
+                            android:textSize="@dimen/_15sdp" />
+
+                    </LinearLayout>
 
                 </LinearLayout>
 
-                <RadioButton
-                    android:id="@+id/radioButton_ringtone"
+                <TextView
+                    android:id="@+id/textView_event"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:checked="@{chargeModel.event == 2 ? true : false}"
-                    android:text="RINGTONE" />
+                    android:layout_marginLeft="8dp"
+                    android:text="Event"
+                    android:textColor="@color/white"
+                    android:textStyle="bold"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/linearLayout_settings" />
 
-                <LinearLayout
-                    android:id="@+id/linearLayout_ringtone"
+                <RadioGroup
+                    android:id="@+id/radioGroup_2"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:visibility="@{chargeModel.event == 2 ? View.VISIBLE : View.GONE}"
-                    tools:visibility="visible">
+                    android:layout_marginStart="@dimen/_15sdp"
+                    android:layout_marginLeft="@dimen/_15sdp"
+                    android:layout_marginEnd="@dimen/_15sdp"
+                    android:layout_marginRight="@dimen/_15sdp"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/textView_event">
 
-                    <Button
-                        android:id="@+id/button_ringtone"
-                        android:layout_width="0dp"
+
+                    <RadioButton
+                        android:id="@+id/radioButton_media"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="@{chargeModel.event == 2 ? chargeModel.eventString: `Select Ringtone`}" />
+                        android:buttonTint="?attr/image_tint_color"
+                        android:checked="@{chargeModel.event == 1 ? true : false}"
+                        android:text="MEDIA"
+                        android:textColor="@color/white" />
 
-                </LinearLayout>
+                    <LinearLayout
+                        android:id="@+id/linearLayout_media"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:visibility="@{chargeModel.event == 1 ? View.VISIBLE : View.GONE}"
+                        tools:visibility="visible">
 
-                <RadioButton
-                    android:id="@+id/radioButton_textToSpeech"
+                        <com.ami.batterwatcher.ui.CustomEditText
+                            android:id="@+id/editText_media"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:background="@drawable/edit_text_bg"
+                            android:editable="false"
+                            android:hint="Select Media"
+                            android:padding="10dp"
+                            android:text="@{chargeModel.event == 1 ? chargeModel.eventString: ``}"
+                            android:textColor="@color/black"
+                            tools:text="" />
+
+                        <Button
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="@dimen/_4sdp"
+                            android:background="@drawable/button_selector"
+                            android:text="File Explorer"
+                            android:textColor="@color/white" />
+
+                    </LinearLayout>
+
+                    <RadioButton
+                        android:id="@+id/radioButton_ringtone"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:buttonTint="?attr/image_tint_color"
+                        android:checked="@{chargeModel.event == 2 ? true : false}"
+                        android:text="RINGTONE"
+                        android:textColor="@color/white" />
+
+                    <LinearLayout
+                        android:id="@+id/linearLayout_ringtone"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:visibility="@{chargeModel.event == 2 ? View.VISIBLE : View.GONE}"
+                        tools:visibility="visible">
+
+                        <Button
+                            android:id="@+id/button_ringtone"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:background="@drawable/button_selector"
+                            android:text="@{chargeModel.event == 2 ? chargeModel.eventString: `Select Ringtone`}"
+                            android:textColor="@color/white" />
+
+                    </LinearLayout>
+
+                    <RadioButton
+                        android:id="@+id/radioButton_textToSpeech"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:buttonTint="?attr/image_tint_color"
+                        android:checked="@{chargeModel.event == 3 ? true : false}"
+                        android:text="TEXT TO SPEECH"
+                        android:textColor="@color/white" />
+
+                    <LinearLayout
+                        android:id="@+id/linearLayout_textToSpeech"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:visibility="@{chargeModel.event == 3 ? View.VISIBLE : View.GONE}"
+                        tools:visibility="visible">
+
+                        <com.ami.batterwatcher.ui.CustomEditText
+                            android:id="@+id/editText_textToSpeechText"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:background="@drawable/edit_text_bg"
+                            android:hint="Enter text"
+                            android:padding="10dp"
+                            android:singleLine="false"
+                            android:text="@{chargeModel.event == 3 ? chargeModel.eventString: ``}"
+                            android:textColor="@color/black"
+                            tools:text="" />
+
+                    </LinearLayout>
+                </RadioGroup>
+
+                <Button
+                    android:id="@+id/button_save"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:checked="@{chargeModel.event == 3 ? true : false}"
-                    android:text="TEXT TO SPEECH" />
+                    android:layout_marginTop="@dimen/_15sdp"
+                    android:layout_weight="1"
+                    android:background="@drawable/button_selector"
+                    android:text="Save"
+                    android:textColor="@color/white"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/radioGroup_2" />
 
-                <LinearLayout
-                    android:id="@+id/linearLayout_textToSpeech"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:visibility="@{chargeModel.event == 3 ? View.VISIBLE : View.GONE}"
-                    tools:visibility="visible">
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </ScrollView>
 
-                    <EditText
-                        android:id="@+id/editText_textToSpeechText"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:hint="Enter text"
-                        android:text="@{chargeModel.event == 3 ? chargeModel.eventString: ``}"
-                        android:textColor="@color/black"
-                        tools:text="" />
 
-                </LinearLayout>
-            </RadioGroup>
-
-        </androidx.constraintlayout.widget.ConstraintLayout>
-    </ScrollView>
-
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </layout>

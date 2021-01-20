@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.media.AudioManager;
 import android.os.BatteryManager;
 import android.os.Build;
 import android.speech.tts.TextToSpeech;
@@ -11,6 +12,7 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.CompoundButton;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.databinding.DataBindingUtil;
@@ -50,8 +52,11 @@ public class MainActivity extends BaseActivity {
     private BroadcastReceiver mBatInfoReceiver;
     private boolean initSuccessfull = false;
     private TextToSpeech tts;
-    private int rawLevel;
+    private int currentBattLevel;
     private BatteryManager myBatteryManager;
+    private AudioManager audio;
+    int currentMusicVolume;
+    int currentRingtoneVolume;
 
     @Override
     protected int setLayout() {
@@ -109,15 +114,14 @@ public class MainActivity extends BaseActivity {
         showBackButton(false);
 
         recyclerView_list.setAdapter(listAdapter);
+        audio = (AudioManager) this.getSystemService(Context.AUDIO_SERVICE);
+        currentMusicVolume = audio.getStreamVolume(AudioManager.STREAM_MUSIC);
+        currentRingtoneVolume = audio.getStreamVolume(AudioManager.STREAM_RING);
     }
 
     @Override
     protected void setListeners() {
-        //registerReceiver(this.mBatInfoReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
-        startService(new Intent(this, BatteryService.class));
-        mBatInfoReceiver = new BroadcastReceiver();
-        final IntentFilter intentFilter = new IntentFilter("YourAction");
-        LocalBroadcastManager.getInstance(this).registerReceiver(mBatInfoReceiver, intentFilter);
+        startBatteryService();
         myBatteryManager = (BatteryManager) mContext.getSystemService(Context.BATTERY_SERVICE);
 
         initSuccessfull = false;
@@ -160,6 +164,34 @@ public class MainActivity extends BaseActivity {
                 startActivity(addIntent);
             }
         });
+
+        viewDataBinding.switchService.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                if (b) {
+                    startBatteryService();
+                } else {
+                    stopBatteryService();
+                }
+            }
+        });
+    }
+
+    private void startBatteryService() {
+        store.setBoolean(isSwitchOff, true);
+        //registerReceiver(this.mBatInfoReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+        startService(new Intent(this, BatteryService.class));
+        mBatInfoReceiver = new BroadcastReceiver();
+        final IntentFilter intentFilter = new IntentFilter("YourAction");
+        LocalBroadcastManager.getInstance(this).registerReceiver(mBatInfoReceiver, intentFilter);
+    }
+
+    private void stopBatteryService() {
+        store.setBoolean(isSwitchOff, false);
+        if (mBatInfoReceiver != null) {
+            LocalBroadcastManager.getInstance(this).unregisterReceiver(mBatInfoReceiver);
+        }
+        mBatInfoReceiver = null;
     }
 
     @Override
@@ -177,11 +209,11 @@ public class MainActivity extends BaseActivity {
             return true;
         } else if (itemId == R.id.menu_info) {
             return true;
-        } else if (itemId == R.id.menu_add) {
+       /* } else if (itemId == R.id.menu_add) {
             Intent addIntent = new Intent(MainActivity.this, AlertDetailsActivity.class);
             addIntent.putExtra("screen_type", 1);
             startActivity(addIntent);
-            return true;
+            return true;*/
         } else if (itemId == R.id.menu_more) {
             return true;
         }
@@ -191,10 +223,7 @@ public class MainActivity extends BaseActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (mBatInfoReceiver != null) {
-            LocalBroadcastManager.getInstance(this).unregisterReceiver(mBatInfoReceiver);
-        }
-        mBatInfoReceiver = null;
+        stopBatteryService();
     }
 
     @Override
@@ -212,7 +241,28 @@ public class MainActivity extends BaseActivity {
         chargeViewModel.getAllChargeWithPercentageSets().observe(this, list2 -> {
             chargeWithPercentageModels.clear();
             chargeWithPercentageModels.addAll(list2);
+            if (list2.size() > 0) {
+                StringBuilder sb1 = new StringBuilder();
+                StringBuilder sb2 = new StringBuilder();
+                for (PercentageModel p1 : list2.get(0).percentageModels) {
+                    if (p1.selected)
+                        sb1.append(p1.percentage).append(",");
+                }
+                for (PercentageModel p2 : list2.get(1).percentageModels) {
+                    if (p2.selected)
+                        sb2.append(p2.percentage).append(",");
+                }
+                viewDataBinding.includeCharging.textViewChargingPercentages.setText(sb1.toString());
+                viewDataBinding.includeDischarging.textViewDisChargingPercentages.setText(sb2.toString());
+            }
         });
+
+        viewDataBinding.includeSetting.textViewStartTime.setText(
+                String.format(Locale.US, "%s",
+                        convertTimePickerTime(
+                                store.getInt(startTimeHr), store.getInt(startTimeMn)) + "-"));
+        viewDataBinding.includeSetting.textViewStopTime.setText(
+                convertTimePickerTime(store.getInt(stopTimeHr), store.getInt(stopTimeMn)));
     }
 
     @Override
@@ -223,27 +273,47 @@ public class MainActivity extends BaseActivity {
     private class BroadcastReceiver extends android.content.BroadcastReceiver {
         @Override
         public void onReceive(Context arg0, Intent intent) {
-            rawLevel = intent.getIntExtra("batteryLevel", -1);
+            currentBattLevel = intent.getIntExtra("batteryLevel", -1);
             int scale = intent.getIntExtra("scale", -1);
             int status = intent.getIntExtra("status", -1);
-            log("rawLevel:" + rawLevel + " scale:" + scale + " status:" + status);
             //Get stored battery value and compare it on the current value
             int storedPreviousBatLevel = store.getInt(previousBatValueKey, -1);
+            log("rawLevel:" + currentBattLevel + " scale:" + scale + " status:" + status + " storedPreviousBatLevel:" + storedPreviousBatLevel);
             //If no stored battery value, then save the current battery level
             if (storedPreviousBatLevel == -1) {
-                store.setInt(previousBatValueKey, rawLevel);
+                store.setInt(previousBatValueKey, currentBattLevel);
             }
             //Only play the TTS if the current battery level is not the same as previous battery level
-            if (storedPreviousBatLevel != -1 //&& storedPreviousBatLevel != rawLevel
-            ) {
-                store.setInt(previousBatValueKey, rawLevel);
+            if (storedPreviousBatLevel != -1) {
                 checkRulesOnTheList();
             } else
-                log("Previous battery level " + storedPreviousBatLevel + " is the same as current level " + rawLevel);
+                log("Previous battery level " + storedPreviousBatLevel + " is the same as current level " + currentBattLevel);
         }
     }
 
     private void checkRulesOnTheList() {
+
+        if (!store.getBoolean(isSwitchOff, false))
+            return;
+
+        //Check if user check disable during call settings
+        if (store.getBoolean(disableAlertDuringCall, true) && isCallActive(mContext))
+            return;
+
+        //Check if user enable max volume for Alert
+        if (store.getBoolean(ignoreSystemAudioProfile, false)) {
+            if (checkModifyMaxVolumePermissionNoPrompt()) {
+                if (store.getBoolean(playSoundWithMaxVolume)) {
+                    int maxMusicVolume = audio.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+                    int maxRingVolume = audio.getStreamMaxVolume(AudioManager.STREAM_NOTIFICATION);
+                    audio.setRingerMode(AudioManager.RINGER_MODE_NORMAL);
+                    audio.setStreamVolume(AudioManager.STREAM_MUSIC, maxMusicVolume,
+                            AudioManager.FLAG_REMOVE_SOUND_AND_VIBRATE);
+                    audio.setStreamVolume(AudioManager.STREAM_RING, maxRingVolume, 0);
+                }
+            }
+        }
+
         boolean ttsWasPlayed = false;
         boolean isCharging = false;
 
@@ -258,41 +328,51 @@ public class MainActivity extends BaseActivity {
         if (chargeWithPercentageModels.size() == 0)
             return;
 
+        int storedPreviousBatLevel = store.getInt(previousBatValueKey, -1);
+        int arrayIndexToGet = 0;
         if (isCharging) {
-            ChargeWithPercentageModel cp = chargeWithPercentageModels.get(0);
-            for (PercentageModel p : cp.percentageModels) {
-                if (ttsWasPlayed)
-                    return;
-                //Charging level
-                if (p.percentage >= rawLevel && p.percentage <= p.percentage) {
-                    ttsWasPlayed = true;
-                    playTTS(cp.chargeModel.eventString);
-                }
-            }
+            arrayIndexToGet = 0;
+
         } else {
-            ChargeWithPercentageModel cp = chargeWithPercentageModels.get(1);
-            for (PercentageModel p : cp.percentageModels) {
-                if (ttsWasPlayed)
-                    return;
-                //Discharging level
-                if (p.percentage >= rawLevel && p.percentage <= p.percentage) {
-                    ttsWasPlayed = true;
-                    playTTS(cp.chargeModel.eventString);
-                }
+            arrayIndexToGet = 1;
+        }
+
+        ChargeWithPercentageModel cp = chargeWithPercentageModels.get(arrayIndexToGet);
+        for (PercentageModel p : cp.percentageModels) {
+            if (ttsWasPlayed)
+                return;
+            // This will check if the "enable repetition" setting is disabled and battery level = percentage
+            if (!store.getBoolean(enableRepeatedAlertForPercentage, true)
+                    && p.percentage >= currentBattLevel && p.percentage <= currentBattLevel) {
+                log("Play tts in with battery level == percentage");
+                store.setInt(previousBatValueKey, currentBattLevel);
+                ttsWasPlayed = true;
+                playTTS(cp.chargeModel.eventString);
+            }
+            /*
+            This will check if previous battery level is not equal to the current level
+             */
+            else if (store.getBoolean(enableRepeatedAlertForPercentage, true)
+                    && storedPreviousBatLevel != currentBattLevel
+            ) {
+                log("Play tts in new battery level");
+                store.setInt(previousBatValueKey, currentBattLevel);
+                ttsWasPlayed = true;
+                playTTS(cp.chargeModel.eventString);
             }
         }
     }
 
     private void playTTS(String tell) {
         tts.setLanguage(Locale.US);
-        tts.speak(tell + " " + rawLevel, TextToSpeech.QUEUE_ADD, null);
+        tts.speak(tell + " " + currentBattLevel, TextToSpeech.QUEUE_ADD, null);
         log("playTTS");
-    }
 
-    public static boolean isCharging(Context context) {
-        Intent intent = context.registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
-        int plugged = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
-        return plugged == BatteryManager.BATTERY_PLUGGED_AC || plugged == BatteryManager.BATTERY_PLUGGED_USB || plugged == BatteryManager.BATTERY_PLUGGED_WIRELESS;
+        //Set volume previous volume level set by user
+        if (checkModifyMaxVolumePermissionNoPrompt() && store.getBoolean(ignoreSystemAudioProfile, false)) {
+            audio.setStreamVolume(AudioManager.STREAM_MUSIC, currentMusicVolume, AudioManager.FLAG_REMOVE_SOUND_AND_VIBRATE);
+            audio.setStreamVolume(AudioManager.STREAM_RING, currentRingtoneVolume, 0);
+        }
     }
 
 }

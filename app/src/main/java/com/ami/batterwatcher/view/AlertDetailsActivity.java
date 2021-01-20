@@ -1,15 +1,11 @@
 package com.ami.batterwatcher.view;
 
 import android.content.Context;
-import android.content.DialogInterface;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.RadioGroup;
 
-import androidx.appcompat.app.AlertDialog;
 import androidx.databinding.DataBindingUtil;
 import androidx.databinding.library.baseAdapters.BR;
 import androidx.lifecycle.ViewModelProvider;
@@ -54,6 +50,11 @@ public class AlertDetailsActivity extends BaseActivity {
             screen_type = getIntent().getIntExtra("screen_type", 0);
             if (null != getIntent().getParcelableExtra("data")) {
                 chargeModel = getIntent().getParcelableExtra("data");
+                if (screen_type == 3) {
+                    chargeModel.event = 3;
+                } else if(screen_type == 4) {
+                    chargeModel.event = 3;
+                }
                 viewDataBinding.setVariable(BR.chargeModel, chargeModel);
             }
         }
@@ -79,13 +80,11 @@ public class AlertDetailsActivity extends BaseActivity {
             setActivityTitle("Edit Charging");
             viewDataBinding.textViewMode.setText("Charging");
             chargeModelId = 1;
-            chargeModel.chargeId = 1;
             percentageViewModel.getAllChargingItems().observe(this, this::setCheckBoxes);
         } else if (screen_type == 4) {
             setActivityTitle("Edit Discharging");
             viewDataBinding.textViewMode.setText("Discharging");
             chargeModelId = 2;
-            chargeModel.chargeId = 2;
             percentageViewModel.getAllDischargingItems().observe(this, this::setCheckBoxes);
         }
 
@@ -93,8 +92,10 @@ public class AlertDetailsActivity extends BaseActivity {
 
     private void setCheckBoxes(List<PercentageModel> list) {
         for (PercentageModel p : list) {
-            if (p.percentage == 97)
-                viewDataBinding.checkbox97.setChecked(p.selected);
+            if (p.percentage == 100)
+                viewDataBinding.checkbox100.setChecked(p.selected);
+            if (p.percentage == 95)
+                viewDataBinding.checkbox95.setChecked(p.selected);
             if (p.percentage == 90)
                 viewDataBinding.checkbox90.setChecked(p.selected);
             if (p.percentage == 80)
@@ -122,30 +123,32 @@ public class AlertDetailsActivity extends BaseActivity {
 
     @Override
     protected void setListeners() {
-        viewDataBinding.checkbox97.setOnCheckedChangeListener((compoundButton, b) ->
-                percentageViewModel.insert(new PercentageModel(screen_type == 3 ? 1 : 13, 97, chargeModelId, b)));
+        viewDataBinding.checkbox100.setOnCheckedChangeListener((compoundButton, b) ->
+                percentageViewModel.insert(new PercentageModel(screen_type == 3 ? 1 : 14, 100, chargeModelId, b)));
+        viewDataBinding.checkbox95.setOnCheckedChangeListener((compoundButton, b) ->
+                percentageViewModel.insert(new PercentageModel(screen_type == 3 ? 2 : 15, 95, chargeModelId, b)));
         viewDataBinding.checkbox90.setOnCheckedChangeListener((compoundButton, b) ->
-                percentageViewModel.insert(new PercentageModel(screen_type == 3 ? 2 : 14, 90, chargeModelId, b)));
+                percentageViewModel.insert(new PercentageModel(screen_type == 3 ? 3 : 16, 90, chargeModelId, b)));
         viewDataBinding.checkbox80.setOnCheckedChangeListener((compoundButton, b) ->
-                percentageViewModel.insert(new PercentageModel(screen_type == 3 ? 3 : 15, 80, chargeModelId, b)));
+                percentageViewModel.insert(new PercentageModel(screen_type == 3 ? 4 : 17, 80, chargeModelId, b)));
         viewDataBinding.checkbox70.setOnCheckedChangeListener((compoundButton, b) ->
-                percentageViewModel.insert(new PercentageModel(screen_type == 3 ? 4 : 16, 70, chargeModelId, b)));
+                percentageViewModel.insert(new PercentageModel(screen_type == 3 ? 5 : 18, 70, chargeModelId, b)));
         viewDataBinding.checkbox60.setOnCheckedChangeListener((compoundButton, b) ->
-                percentageViewModel.insert(new PercentageModel(screen_type == 3 ? 5 : 17, 60, chargeModelId, b)));
+                percentageViewModel.insert(new PercentageModel(screen_type == 3 ? 6 : 19, 60, chargeModelId, b)));
         viewDataBinding.checkbox50.setOnCheckedChangeListener((compoundButton, b) ->
-                percentageViewModel.insert(new PercentageModel(screen_type == 3 ? 6 : 18, 50, chargeModelId, b)));
+                percentageViewModel.insert(new PercentageModel(screen_type == 3 ? 7 : 20, 50, chargeModelId, b)));
         viewDataBinding.checkbox40.setOnCheckedChangeListener((compoundButton, b) ->
-                percentageViewModel.insert(new PercentageModel(screen_type == 3 ? 7 : 19, 40, chargeModelId, b)));
+                percentageViewModel.insert(new PercentageModel(screen_type == 3 ? 8 : 21, 40, chargeModelId, b)));
         viewDataBinding.checkbox30.setOnCheckedChangeListener((compoundButton, b) ->
-                percentageViewModel.insert(new PercentageModel(screen_type == 3 ? 8 : 20, 30, chargeModelId, b)));
+                percentageViewModel.insert(new PercentageModel(screen_type == 3 ? 9 : 22, 30, chargeModelId, b)));
         viewDataBinding.checkbox20.setOnCheckedChangeListener((compoundButton, b) ->
-                percentageViewModel.insert(new PercentageModel(screen_type == 3 ? 9 : 21, 20, chargeModelId, b)));
+                percentageViewModel.insert(new PercentageModel(screen_type == 3 ? 10 : 23, 20, chargeModelId, b)));
         viewDataBinding.checkbox10.setOnCheckedChangeListener((compoundButton, b) ->
-                percentageViewModel.insert(new PercentageModel(screen_type == 3 ? 10 : 22, 10, chargeModelId, b)));
+                percentageViewModel.insert(new PercentageModel(screen_type == 3 ? 11 : 24, 10, chargeModelId, b)));
         viewDataBinding.checkbox7.setOnCheckedChangeListener((compoundButton, b) ->
-                percentageViewModel.insert(new PercentageModel(screen_type == 3 ? 11 : 23, 7, chargeModelId, b)));
+                percentageViewModel.insert(new PercentageModel(screen_type == 3 ? 12 : 25, 7, chargeModelId, b)));
         viewDataBinding.checkbox3.setOnCheckedChangeListener((compoundButton, b) ->
-                percentageViewModel.insert(new PercentageModel(screen_type == 3 ? 12 : 24, 3, chargeModelId, b)));
+                percentageViewModel.insert(new PercentageModel(screen_type == 3 ? 13 : 26, 3, chargeModelId, b)));
         viewDataBinding.radioGroup2.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(RadioGroup radioGroup, int i) {
@@ -169,12 +172,12 @@ public class AlertDetailsActivity extends BaseActivity {
                     viewDataBinding.linearLayoutRingtone.setVisibility(View.GONE);
                     viewDataBinding.linearLayoutTextToSpeech.setVisibility(View.VISIBLE);
                     viewDataBinding.editTextMedia.setText("");
-                    viewDataBinding.buttonRingtone.setText("select ringtone");
+                    viewDataBinding.buttonRingtone.setText("Select Ringtone");
                 }
             }
         });
 
-        if (screen_type == menu_update && chargeModel != null) {
+        if (chargeModel != null) {
             if (chargeModel.event == 1) {
                 viewDataBinding.radioButtonMedia.setChecked(true);
             } else if (chargeModel.event == 2) {
@@ -183,17 +186,8 @@ public class AlertDetailsActivity extends BaseActivity {
                 viewDataBinding.radioButtonTextToSpeech.setChecked(true);
             }
         }
-    }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_edit_or_add_alert, menu);
-        return super.onCreateOptionsMenu(menu);
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == R.id.menu_save) {
+        viewDataBinding.buttonSave.setOnClickListener((View.OnClickListener) view -> {
             if (!TextUtils.isEmpty(viewDataBinding.editTextMedia.getText().toString())) {
                 chargeModel.eventString = viewDataBinding.editTextMedia.getText().toString();
             }
@@ -206,32 +200,31 @@ public class AlertDetailsActivity extends BaseActivity {
 
             //data check
             if (chargeModel.event == -1) {
-                showMissingField("Select event");
-                return true;
+                showDialogOkButton("Select event");
+                return;
             } else if (chargeModel.event == 3 && TextUtils.isEmpty(viewDataBinding.editTextTextToSpeechText.getText().toString())) {
-                showMissingField("Enter text to speech text");
-                return true;
+                showDialogOkButton("Enter text to speech text");
+                return;
             }
 
             chargeViewModel.insert(chargeModel);
 
             onBackPressed();
+        });
+    }
+
+    /*@Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_edit_or_add_alert, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == R.id.menu_save) {
+
         }
         return (super.onOptionsItemSelected(item));
-    }
-
-    private void showMissingField(String message) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setMessage(message)
-                .setCancelable(false)
-                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        dialog.dismiss();
-                    }
-                });
-        AlertDialog alert = builder.create();
-        alert.show();
-    }
-
+    }*/
 
 }

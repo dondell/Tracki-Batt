@@ -11,15 +11,18 @@
         android:id="@+id/menu_info"
         android:icon="@drawable/ic_iconfinder_faq"
         android:title="Item"
+        android:visible="false"
         app:showAsAction="always|withText" />
     <item
         android:id="@+id/menu_add"
         android:icon="@drawable/ic_baseline_add_24"
         android:title="Item"
+        android:visible="false"
         app:showAsAction="always|withText" />
     <item
         android:id="@+id/menu_more"
         android:icon="@drawable/ic_baseline_more_vert_24"
         android:title="Item"
+        android:visible="false"
         app:showAsAction="always|withText" />
 </menu>

@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <integer-array name="device_settings_track_every_values">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>5</item>
+        <item>10</item>
+        <item>30</item>
+        <item>60</item>
+        <item>120</item>
+        <item>240</item>
+    </integer-array>
+
+    <integer-array name="phone_locator_values">
+        <item>0</item>
+        <item>5</item>
+        <item>15</item>
+        <item>30</item>
+        <item>60</item>
+        <item>300</item>
+        <item>900</item>
+        <item>1800</item>
+        <item>3600</item>
+    </integer-array>
+
+
+
+
+    <integer-array name="get_history_options_hours">
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+        <item>5</item>
+        <item>6</item>
+        <item>8</item>
+        <item>10</item>
+        <item>12</item>
+        <item>16</item>
+        <item>20</item>
+        <item>24</item>
+        <item>48</item>
+        <item>168</item>
+        <item>720</item>
+        <item>0</item>
+        <item>25</item>
+
+    </integer-array>
+
+    <integer-array name="get_purpose_spinner">
+        <item>-1</item>
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+    </integer-array>
+
+    <integer-array name="get_history_options_hours3">
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+        <item>5</item>
+        <item>6</item>
+        <item>8</item>
+        <item>10</item>
+        <item>12</item>
+        <item>16</item>
+        <item>20</item>
+        <item>24</item>
+        <item>48</item>
+        <item>168</item>
+
+    </integer-array>
+
+    <integer-array name="get_history_options_hours2">
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+        <item>5</item>
+        <item>6</item>
+        <item>8</item>
+        <item>10</item>
+        <item>12</item>
+        <item>16</item>
+        <item>20</item>
+        <item>24</item>
+        <item>48</item>
+        <item>168</item>
+        <item>720</item>
+        <item>0</item>
+
+    </integer-array>
+
+    <integer-array name="get_duration_options_hours">
+        <item>1</item>
+        <item>5</item>
+        <item>10</item>
+        <item>24</item>
+        <item>72</item>
+        <item>168</item>
+        <item>-1</item>
+    </integer-array>
+
+</resources>

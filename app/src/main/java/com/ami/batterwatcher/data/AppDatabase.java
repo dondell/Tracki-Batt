@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
+import androidx.room.migration.Migration;
 import androidx.sqlite.db.SupportSQLiteDatabase;
 
 import com.ami.batterwatcher.viewmodels.AlertModel;
@@ -16,10 +17,12 @@ import com.ami.batterwatcher.viewmodels.PercentageModel;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-@Database(entities = {AlertModel.class, ChargeModel.class, PercentageModel.class}, version = 1)
+@Database(entities = {AlertModel.class, ChargeModel.class, PercentageModel.class}, version = 2)
 public abstract class AppDatabase extends RoomDatabase {
     public abstract AlertDao userDao();
+
     public abstract ChargeDao chargeDao();
+
     public abstract PercentageDao percentageDao();
 
     private static volatile AppDatabase INSTANCE;
@@ -34,6 +37,7 @@ public abstract class AppDatabase extends RoomDatabase {
                     INSTANCE = Room.databaseBuilder(context.getApplicationContext(),
                             AppDatabase.class, "tracki-batt")
                             .addCallback(sRoomDatabaseCallback)
+                            .addMigrations(MIGRATION_1_2)
                             .build();
                 }
             }
@@ -66,5 +70,17 @@ public abstract class AppDatabase extends RoomDatabase {
             });
         }
     };
+
+    static final Migration MIGRATION_1_2 = new Migration(1, 2) {
+        @Override
+        public void migrate(SupportSQLiteDatabase database) {
+            /*
+            SQLite does not have a boolean data type. Room maps it to an INTEGER column,
+            mapping true to 1 and false to 0. I think below code would be work
+             */
+            database.execSQL("ALTER TABLE percentagemodel " + " ADD COLUMN doneAlerted INTEGER NOT NULL DEFAULT 0");
+        }
+    };
+
 
 }

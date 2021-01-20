@@ -13,12 +13,17 @@ import android.util.Log;
 
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
+import com.ami.batterwatcher.base.BaseActivity;
+import com.ami.batterwatcher.util.PrefStore;
+
 public class BatteryService extends Service {
 
-    private static final int CHECK_BATTERY_INTERVAL = 10000; //1 minute
+    public static final int DEFAULT_CHECK_BATTERY_INTERVAL = 10000;
+    private static final int CHECK_BATTERY_INTERVAL = DEFAULT_CHECK_BATTERY_INTERVAL;
 
     private double batteryLevel;
     private Handler handler;
+    private PrefStore store;
 
     private BroadcastReceiver batInfoReceiver = new BroadcastReceiver() {
         @Override
@@ -29,7 +34,7 @@ public class BatteryService extends Service {
             if (rawlevel >= 0 && scale > 0) {
                 batteryLevel = (rawlevel * 100.0) / scale;
             }
-            Log.e("xxx Battery status is", "xxx " + batteryLevel + "mm");
+            //Log.e("xxx Battery status is", "xxx " + batteryLevel + "mm");
         }
     };
 
@@ -38,8 +43,12 @@ public class BatteryService extends Service {
         public void run() {
             //DO WHATEVER YOU WANT WITH LATEST BATTERY LEVEL STORED IN batteryLevel HERE...
             // schedule next battery check
-            handler.postDelayed(checkBatteryStatusRunnable, CHECK_BATTERY_INTERVAL);
-            Log.e("Battery status is", batteryLevel + "mm cached");
+            int interval = store.getInt(
+                    BaseActivity.checkIntervalOnBatteryServiceLevelChecker,
+                    DEFAULT_CHECK_BATTERY_INTERVAL) * 1000 * 60;
+            handler.postDelayed(checkBatteryStatusRunnable, store != null ? interval
+                    : DEFAULT_CHECK_BATTERY_INTERVAL);
+            Log.e("Battery status is", batteryLevel + "mm cached. Interval: " + interval);
 
             Intent intent = new Intent("YourAction");
             Bundle bundle = new Bundle();
@@ -51,6 +60,7 @@ public class BatteryService extends Service {
 
     @Override
     public void onCreate() {
+        store = new PrefStore(this);
         handler = new Handler();
         handler.postDelayed(checkBatteryStatusRunnable, CHECK_BATTERY_INTERVAL);
         registerReceiver(batInfoReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
