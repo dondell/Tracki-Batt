@@ -10,91 +10,138 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@mipmap/bg"
-        tools:context=".view.MainActivity">
+        android:background="@mipmap/bg">
 
         <View
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="@drawable/default_gradient_bg" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Hello World!"
-            android:visibility="gone"
+            android:layout_height="0dp"
+            android:background="@drawable/default_gradient_bg"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <LinearLayout
+        <ScrollView
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center_horizontal"
-            android:orientation="vertical"
-            app:layout_constraintBottom_toTopOf="@+id/switch_service"
-            app:layout_constraintTop_toTopOf="parent">
+            android:layout_height="match_parent"
+            tools:context=".view.MainActivity">
 
-            <include
-                android:id="@+id/include_setting"
-                layout="@layout/item_sleep_settings"
-                android:layout_width="@dimen/_250sdp"
-                android:layout_height="@dimen/_60sdp"
-                app:layout_constraintTop_toTopOf="parent" />
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
 
-            <include
-                android:id="@+id/include_charging"
-                layout="@layout/item_charging"
-                android:layout_width="@dimen/_250sdp"
-                android:layout_height="@dimen/_60sdp"
-                android:layout_marginTop="@dimen/_30sdp"
-                app:layout_constraintTop_toBottomOf="@+id/include_setting" />
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/_10sdp"
+                    android:layout_marginBottom="@dimen/_15sdp"
+                    android:gravity="center_horizontal"
+                    android:orientation="vertical"
+                    app:layout_constraintBottom_toTopOf="@id/linearLayout_switch"
+                    app:layout_constraintTop_toTopOf="parent">
 
-            <include
-                android:id="@+id/include_discharging"
-                layout="@layout/item_discharging"
-                android:layout_width="@dimen/_250sdp"
-                android:layout_height="@dimen/_60sdp"
-                android:layout_marginTop="@dimen/_30sdp"
-                app:layout_constraintTop_toBottomOf="@+id/include_charging" />
-        </LinearLayout>
+                    <com.ami.batterwatcher.ui.CustomBoldTV
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="@dimen/_10sdp"
+                        android:gravity="center"
+                        android:text="Settings summary"
+                        android:textSize="@dimen/_18sdp" />
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recyclerView_list"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_marginBottom="@dimen/_15sdp"
-            android:visibility="gone"
-            app:layout_constraintBottom_toTopOf="@+id/switch_service"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
-            tools:itemCount="5"
-            tools:listitem="@layout/item_alert" />
+                    <include
+                        android:id="@+id/include_setting"
+                        layout="@layout/item_sleep_settings"
+                        android:layout_width="@dimen/_250sdp"
+                        android:layout_height="@dimen/_60sdp"
+                        app:layout_constraintTop_toTopOf="parent" />
 
-        <com.google.android.material.switchmaterial.SwitchMaterial
-            android:id="@+id/switch_service"
-            android:layout_width="wrap_content"
-            android:layout_height="@dimen/_50sdp"
-            android:layout_marginBottom="@dimen/_15sdp"
-            android:checked="true"
-            android:textColor="@color/white"
-            android:text="Battery alerts App    Off"
-            android:textStyle="bold"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent" />
+                    <include
+                        android:id="@+id/include_charging"
+                        layout="@layout/item_charging"
+                        android:layout_width="@dimen/_250sdp"
+                        android:layout_height="@dimen/_60sdp"
+                        android:layout_marginTop="@dimen/_2sdp"
+                        app:layout_constraintTop_toBottomOf="@+id/include_setting" />
 
-        <com.ami.batterwatcher.ui.CustomBoldTV
-            android:id="@+id/textView_On"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="On"
-            android:textColor="@color/white"
-            android:textStyle="bold"
-            app:layout_constraintBottom_toBottomOf="@+id/switch_service"
-            app:layout_constraintStart_toEndOf="@id/switch_service"
-            app:layout_constraintTop_toTopOf="@id/switch_service" />
+                    <include
+                        android:id="@+id/include_discharging"
+                        layout="@layout/item_discharging"
+                        android:layout_width="@dimen/_250sdp"
+                        android:layout_height="@dimen/_60sdp"
+                        android:layout_marginTop="@dimen/_2sdp"
+                        app:layout_constraintTop_toBottomOf="@+id/include_charging" />
 
+                    <include
+                        android:id="@+id/include_audiosetting"
+                        layout="@layout/item_audio_settings"
+                        android:layout_width="@dimen/_250sdp"
+                        android:layout_height="@dimen/_60sdp"
+                        android:layout_marginTop="@dimen/_2sdp"
+                        app:layout_constraintTop_toBottomOf="@+id/include_charging" />
+
+                    <include
+                        android:id="@+id/include_promoteTrackiApp"
+                        layout="@layout/item_promote_tracki_app"
+                        android:layout_width="@dimen/_250sdp"
+                        android:layout_height="@dimen/_60sdp"
+                        android:layout_marginTop="@dimen/_2sdp"
+                        app:layout_constraintTop_toBottomOf="@+id/include_charging" />
+
+                    <include
+                        android:id="@+id/include_buyOnAmazon"
+                        layout="@layout/item_buy_tracki_device"
+                        android:layout_width="@dimen/_250sdp"
+                        android:layout_height="@dimen/_60sdp"
+                        android:layout_marginTop="@dimen/_2sdp"
+                        app:layout_constraintTop_toBottomOf="@+id/include_charging" />
+                </LinearLayout>
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/recyclerView_list"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_marginBottom="@dimen/_15sdp"
+                    android:visibility="gone"
+                    app:layout_constraintBottom_toTopOf="@+id/linearLayout_switch"
+                    app:layout_constraintLeft_toLeftOf="parent"
+                    app:layout_constraintRight_toRightOf="parent"
+                    tools:itemCount="5"
+                    tools:listitem="@layout/item_alert" />
+
+                <LinearLayout
+                    android:id="@+id/linearLayout_switch"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:orientation="horizontal"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent">
+
+                    <com.google.android.material.switchmaterial.SwitchMaterial
+                        android:id="@+id/switch_service"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:checked="true"
+                        android:text="Battery alerts App    Off"
+                        android:textColor="@color/white"
+                        android:textStyle="bold"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent" />
+
+                    <com.ami.batterwatcher.ui.CustomBoldTV
+                        android:id="@+id/textView_On"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="On"
+                        android:textColor="@color/white"
+                        android:textStyle="bold"
+                        app:layout_constraintBottom_toBottomOf="@+id/switch_service"
+                        app:layout_constraintStart_toEndOf="@+id/switch_service"
+                        app:layout_constraintTop_toTopOf="@id/switch_service" />
+
+                </LinearLayout>
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </ScrollView>
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

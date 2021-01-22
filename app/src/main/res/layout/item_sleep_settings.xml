@@ -27,7 +27,7 @@
                 android:layout_height="@dimen/_30sdp"
                 android:layout_marginStart="@dimen/_10sdp"
                 android:layout_marginLeft="@dimen/_10sdp"
-                android:src="@drawable/ic_baseline_access_alarm_24"
+                android:src="@drawable/ic_baseline_alarm_off_24"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
@@ -39,7 +39,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="8dp"
                 android:background="@color/transparent"
-                android:text="Sleep mode"
+                android:text="Sleep mode\n(Alerts are off during these hours)"
                 android:textColor="@color/blue"
                 android:textStyle="bold"
                 app:layout_constraintBottom_toTopOf="@+id/textView_startTime"
@@ -84,7 +84,7 @@
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                app:tint="@color/black" />
+                app:tint="@color/dark_gray" />
         </androidx.constraintlayout.widget.ConstraintLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>

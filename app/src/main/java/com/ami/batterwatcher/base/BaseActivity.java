@@ -13,6 +13,8 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
+import android.widget.TimePicker;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -21,7 +23,12 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.ami.batterwatcher.BuildConfig;
+import com.ami.batterwatcher.R;
 import com.ami.batterwatcher.util.PrefStore;
+
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 
 public abstract class BaseActivity extends AppCompatActivity {
     public Context mContext;
@@ -29,21 +36,27 @@ public abstract class BaseActivity extends AppCompatActivity {
     public LayoutInflater inflater;
     public PrefStore store;
     //SharedPreference keys
-    public static String previousBatValueKey = "previousBatValueKey";//int
-    public static String isSleepModeDisabledKey = "isSleepModeDisabledKey";//boolean
-    public static String isSwitchOff = "isSwitchOff";//boolean
-    public static String startTimeValueKey = "startTimeValueKey";//time
-    public static String endTimeValueKey = "endTimeValueKey";//time
-    public static String enableRepeatedAlertForPercentage = "enableRepeatedAlertForPercentage";//boolean This will repeat TTS
-    public static String checkIntervalOnBatteryServiceLevelChecker = "checkIntervalOnBatteryServiceLevelChecker";//int in minute
-    public static String ignoreSystemAudioProfile = "ignoreSystemAudioProfile";//boolean
-    public static String playSoundWithMaxVolume = "playSoundWithMaxVolume";//boolean
-    public static String disableAlertDuringCall = "disableAlertDuringCall";//boolean
-    public static String startTimeHr = "startTimeHr";//int
-    public static String startTimeMn = "startTimeMn";//int
-    public static String stopTimeHr = "stopTimeHr";//int
-    public static String stopTimeMn = "stopTimeMn";//int
+    public static final String previousBatValueKey = "previousBatValueKey";//int
+    public static final String isSleepModeDisabledKey = "isSleepModeDisabledKey";//boolean
+    public static final String isSwitchOff = "isSwitchOff";//boolean
+    public static final String startTimeValueKey = "startTimeValueKey";//time
+    public static final String endTimeValueKey = "endTimeValueKey";//time
+    public static final String enableRepeatedAlertForPercentage = "enableRepeatedAlertForPercentage";//boolean This will repeat TTS
+    public static final String checkIntervalOnBatteryServiceLevelChecker = "checkIntervalOnBatteryServiceLevelChecker";//int in minute
+    public static final String timeStampAlertLastPlayed = "timeStampAlertLastPlayed";//long Time when the last time alert was sounded
+    public static final String ignoreSystemAudioProfile = "ignoreSystemAudioProfile";//boolean
+    public static final String playSoundWithMaxVolume = "playSoundWithMaxVolume";//boolean
+    public static final String disableAlertDuringCall = "disableAlertDuringCall";//boolean
+    public static final String startTimeHr = "startTimeHr";//int
+    public static final String startTimeMn = "startTimeMn";//int
+    public static final String stopTimeHr = "stopTimeHr";//int
+    public static final String stopTimeMn = "stopTimeMn";//int
+    public static final String ttsVoiceType = "ttsVoiceType"; //int 1=male, 2=female
+    public static final String isCharging = "isCharging";//boolean
+    public static final String ttsFemale = "ttsFemale";//String
+    public static final String ttsMale = "ttsMale";//String
     private static final int REQUEST_CODE_MAX_VOL = 1001;
+    private SimpleDateFormat formatter;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -56,6 +69,7 @@ public abstract class BaseActivity extends AppCompatActivity {
 
         mContext = BaseActivity.this;
         store = new PrefStore(mContext);
+        formatter = new SimpleDateFormat("dd.MM.yyyy, HH:mm");
         setData();
         setView();
         setViews();
@@ -90,6 +104,12 @@ public abstract class BaseActivity extends AppCompatActivity {
     }
 
     public void log(String logMessage) {
+        if (BuildConfig.DEBUG) {
+            Log.e("xxx", "xxx " + logMessage);
+        }
+    }
+
+    public static void logStatic(String logMessage) {
         if (BuildConfig.DEBUG) {
             Log.e("xxx", "xxx " + logMessage);
         }
@@ -171,5 +191,83 @@ public abstract class BaseActivity extends AppCompatActivity {
             mm_precede = "0";
         }
         return "" + hourOfDay + ":" + mm_precede + selectedMinute + AM_PM;
+    }
+
+    public long saveTime() {
+        formatter.setLenient(false);
+        Date curDate = new Date();
+        long curMillis = curDate.getTime();
+        String curTime = formatter.format(curDate);
+        store.saveLong(timeStampAlertLastPlayed, curMillis);
+        return curMillis;
+    }
+
+    public boolean isTimeIntervalDone() {
+        /*String oldTime = "05.01.2011, 12:45";
+        Date oldDate = null;
+        try {
+            oldDate = formatter.parse(oldTime);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        if (oldDate != null) {
+            long oldMillis = oldDate.getTime();
+        }*/
+
+        Date curDate = new Date();
+        int hours;
+        int min = 0;
+        int days;
+        long curMillis = curDate.getTime();
+        long prevTime = store.getLong(timeStampAlertLastPlayed, -1);
+        if (prevTime != -1) {
+            long diff = curMillis - prevTime;
+            days = (int) (diff / (1000 * 60 * 60 * 24));
+            hours = (int) ((diff - (1000 * 60 * 60 * 24 * days)) / (1000 * 60 * 60 * 24));
+            min = (int) (diff - (1000 * 60 * 60 * 24 * days) - (1000 * 60 * 60 * hours)) / (1000 * 60);
+            hours = (hours < 0 ? -hours : hours);
+            if (min >= store.getInt(checkIntervalOnBatteryServiceLevelChecker)) {
+                log("interval is now pass " + min + " minutes");
+                store.saveLong(timeStampAlertLastPlayed, curMillis);
+                return true;
+            }
+        } else {
+            log("no timeStampAlertLastPlayed set. Setting now.");
+            store.saveLong(timeStampAlertLastPlayed, curMillis);
+        }
+        return false;
+    }
+
+    public void showTimePicker(TimePicker.OnTimeChangedListener timeChangedListener) {
+        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
+        LayoutInflater inflater = this.getLayoutInflater();
+        View dialogView = inflater.inflate(R.layout.fragment_timepicker, null);
+        dialogBuilder.setView(dialogView);
+
+        Button positiveBT = dialogView.findViewById(R.id.button_ok);
+
+        Calendar mcurrentTime = Calendar.getInstance();
+        int hour = mcurrentTime.get(Calendar.HOUR_OF_DAY);
+        int minute = mcurrentTime.get(Calendar.MINUTE);
+
+        TimePicker timePicker_time = dialogView.findViewById(R.id.timePicker_time);
+        timePicker_time.setIs24HourView(false);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            timePicker_time.setHour(hour);
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            timePicker_time.setMinute(minute);
+        }
+        timePicker_time.setOnTimeChangedListener(timeChangedListener);
+
+        AlertDialog alertDialog = dialogBuilder.create();
+        if (!isFinishing())
+            alertDialog.show();
+        positiveBT.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                alertDialog.dismiss();
+            }
+        });
     }
 }

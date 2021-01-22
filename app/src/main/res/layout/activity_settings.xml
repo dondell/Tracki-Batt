@@ -61,8 +61,7 @@
                         android:layout_marginTop="@dimen/_4sdp"
                         android:text="Set a service suspension interval"
                         android:textColor="@color/black"
-                        android:textSize="@dimen/_8sdp"
-                        android:textStyle="bold"
+                        android:textSize="@dimen/_10sdp"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@id/textView_text1" />
 
@@ -224,7 +223,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginLeft="8dp"
                         android:layout_marginTop="@dimen/_15sdp"
-                        android:text="Task"
+                        android:text="Repetition"
                         android:textColor="@color/black"
                         android:textStyle="bold"
                         app:layout_constraintStart_toStartOf="parent"
@@ -232,14 +231,17 @@
 
                     <TextView
                         android:id="@+id/textView_text4"
-                        android:layout_width="wrap_content"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
                         android:layout_marginLeft="8dp"
                         android:layout_marginTop="@dimen/_4sdp"
-                        android:text="Set Interval in minutes"
+                        android:layout_marginEnd="8dp"
+                        android:layout_marginRight="8dp"
+                        android:text="Set every how many minutes announcement will be repeating after was announced the first time for  a specific percentage interval"
                         android:textColor="@color/black"
-                        android:textSize="@dimen/_8sdp"
-                        android:textStyle="bold"
+                        android:textSize="@dimen/_10sdp"
+                        app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@id/textView_text5" />
 
@@ -290,6 +292,54 @@
                         android:text="Enable notification sound repetition"
                         android:textColor="@color/black"
                         app:layout_constraintTop_toBottomOf="@+id/linearLayout_interval" />
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="@dimen/_8sdp"
+                    android:background="@color/white"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:id="@+id/textView_tts"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="8dp"
+                        android:layout_marginTop="@dimen/_15sdp"
+                        android:text="Will modify this first "
+                        android:textColor="@color/black"
+                        android:textStyle="bold"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="vertical"
+                        android:padding="@dimen/_8sdp"
+                        app:layout_constraintTop_toBottomOf="@+id/textView_tts">
+
+                        <RadioGroup
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content">
+
+                            <RadioButton
+                                android:id="@+id/radioButton_male"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Male Voice" />
+
+                            <RadioButton
+                                android:id="@+id/radioButton_female"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Female Voice" />
+                        </RadioGroup>
+                    </LinearLayout>
 
                 </androidx.constraintlayout.widget.ConstraintLayout>
 

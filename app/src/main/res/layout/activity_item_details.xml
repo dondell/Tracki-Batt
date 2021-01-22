@@ -73,118 +73,130 @@
                         android:textAlignment="center"
                         android:textColor="@color/white" />
 
-                    <LinearLayout
+                    <androidx.constraintlayout.widget.ConstraintLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center"
                         android:layout_marginLeft="@dimen/_8sdp"
                         android:layout_marginRight="@dimen/_8sdp"
-                        android:gravity="center_horizontal"
-                        android:orientation="horizontal">
+                        android:gravity="center_horizontal">
 
                         <CheckBox
                             android:id="@+id/checkbox_100"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:layout_marginEnd="27dp"
+                            android:layout_marginRight="27dp"
+                            android:layout_weight="1"
                             android:buttonTint="?attr/image_tint_color"
                             android:text="100%"
                             android:textColor="@color/white"
-                            android:textSize="@dimen/_15sdp" />
+                            android:textSize="@dimen/_15sdp"
+                            app:layout_constraintEnd_toStartOf="@+id/checkbox_95"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent" />
 
                         <CheckBox
                             android:id="@+id/checkbox_95"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:layout_marginEnd="27dp"
+                            android:layout_marginRight="27dp"
+                            app:layout_constraintTop_toTopOf="parent"
+                            android:layout_weight="1"
                             android:buttonTint="?attr/image_tint_color"
                             android:text="95%"
                             android:textColor="@color/white"
-                            android:visibility="gone" />
+                            android:visibility="gone"
+                            app:layout_constraintEnd_toStartOf="@+id/checkbox_90" />
 
                         <CheckBox
                             android:id="@+id/checkbox_90"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:layout_marginEnd="27dp"
+                            app:layout_constraintTop_toTopOf="parent"
+                            android:layout_marginRight="27dp"
+                            android:layout_weight="1"
                             android:buttonTint="?attr/image_tint_color"
                             android:text="90%"
                             android:textColor="@color/white"
-                            android:textSize="@dimen/_15sdp" />
+                            android:textSize="@dimen/_15sdp"
+                            app:layout_constraintEnd_toStartOf="@+id/checkbox_80" />
 
                         <CheckBox
                             android:id="@+id/checkbox_80"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:layout_marginEnd="27dp"
+                            android:layout_marginRight="27dp"
+                            app:layout_constraintTop_toTopOf="parent"
+                            android:layout_weight="1"
                             android:buttonTint="?attr/image_tint_color"
                             android:text="80%"
                             android:textColor="@color/white"
-                            android:textSize="@dimen/_15sdp" />
+                            android:textSize="@dimen/_15sdp"
+                            app:layout_constraintEnd_toStartOf="@+id/checkbox_70" />
 
                         <CheckBox
                             android:id="@+id/checkbox_70"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:buttonTint="?attr/image_tint_color"
+                            app:layout_constraintTop_toTopOf="parent"
                             android:text="70%"
                             android:textColor="@color/white"
-                            android:textSize="@dimen/_15sdp" />
+                            android:textSize="@dimen/_15sdp"
+                            app:layout_constraintEnd_toEndOf="parent" />
 
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:layout_marginLeft="@dimen/_8sdp"
-                        android:layout_marginRight="@dimen/_8sdp"
-                        android:gravity="center_horizontal"
-                        android:orientation="horizontal">
 
                         <CheckBox
                             android:id="@+id/checkbox_60"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:layout_weight="1"
                             android:buttonTint="?attr/image_tint_color"
                             android:text="60%"
                             android:textColor="@color/white"
-                            android:textSize="@dimen/_15sdp" />
+                            android:textSize="@dimen/_15sdp"
+                            app:layout_constraintStart_toStartOf="@+id/checkbox_100"
+                            app:layout_constraintTop_toBottomOf="@id/checkbox_100" />
 
                         <CheckBox
                             android:id="@+id/checkbox_50"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:layout_weight="1"
                             android:buttonTint="?attr/image_tint_color"
                             android:text="50%"
                             android:textColor="@color/white"
-                            android:textSize="@dimen/_15sdp" />
+                            android:textSize="@dimen/_15sdp"
+                            app:layout_constraintStart_toStartOf="@+id/checkbox_90"
+                            app:layout_constraintTop_toBottomOf="@+id/checkbox_90" />
 
                         <CheckBox
                             android:id="@+id/checkbox_40"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:layout_weight="1"
                             android:buttonTint="?attr/image_tint_color"
                             android:text="40%"
                             android:textColor="@color/white"
-                            android:textSize="@dimen/_15sdp" />
+                            android:textSize="@dimen/_15sdp"
+                            app:layout_constraintStart_toStartOf="@+id/checkbox_80"
+                            app:layout_constraintTop_toBottomOf="@+id/checkbox_80" />
 
                         <CheckBox
                             android:id="@+id/checkbox_30"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:layout_weight="1"
                             android:buttonTint="?attr/image_tint_color"
                             android:text="30%"
                             android:textColor="@color/white"
-                            android:textSize="@dimen/_15sdp" />
-
-
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:layout_marginLeft="@dimen/_8sdp"
-                        android:layout_marginRight="@dimen/_8sdp"
-                        android:gravity="center_horizontal"
-                        android:orientation="horizontal">
+                            android:textSize="@dimen/_15sdp"
+                            app:layout_constraintStart_toStartOf="@+id/checkbox_70"
+                            app:layout_constraintTop_toBottomOf="@+id/checkbox_70" />
 
                         <CheckBox
                             android:id="@+id/checkbox_20"
@@ -193,7 +205,9 @@
                             android:buttonTint="?attr/image_tint_color"
                             android:text="20%"
                             android:textColor="@color/white"
-                            android:textSize="@dimen/_15sdp" />
+                            android:textSize="@dimen/_15sdp"
+                            app:layout_constraintStart_toStartOf="@id/checkbox_60"
+                            app:layout_constraintTop_toBottomOf="@id/checkbox_60" />
 
                         <CheckBox
                             android:id="@+id/checkbox_10"
@@ -202,7 +216,9 @@
                             android:buttonTint="?attr/image_tint_color"
                             android:text="10%"
                             android:textColor="@color/white"
-                            android:textSize="@dimen/_15sdp" />
+                            android:textSize="@dimen/_15sdp"
+                            app:layout_constraintStart_toStartOf="@id/checkbox_50"
+                            app:layout_constraintTop_toBottomOf="@+id/checkbox_50" />
 
                         <CheckBox
                             android:id="@+id/checkbox_7"
@@ -211,7 +227,9 @@
                             android:buttonTint="?attr/image_tint_color"
                             android:text="7%"
                             android:textColor="@color/white"
-                            android:textSize="@dimen/_15sdp" />
+                            android:textSize="@dimen/_15sdp"
+                            app:layout_constraintStart_toStartOf="@+id/checkbox_40"
+                            app:layout_constraintTop_toBottomOf="@+id/checkbox_40" />
 
                         <CheckBox
                             android:id="@+id/checkbox_3"
@@ -220,9 +238,11 @@
                             android:buttonTint="?attr/image_tint_color"
                             android:text="3%"
                             android:textColor="@color/white"
-                            android:textSize="@dimen/_15sdp" />
+                            android:textSize="@dimen/_15sdp"
+                            app:layout_constraintStart_toStartOf="@+id/checkbox_30"
+                            app:layout_constraintTop_toBottomOf="@+id/checkbox_30" />
 
-                    </LinearLayout>
+                    </androidx.constraintlayout.widget.ConstraintLayout>
 
                 </LinearLayout>
 

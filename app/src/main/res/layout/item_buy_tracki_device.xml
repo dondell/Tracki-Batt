@@ -5,10 +5,6 @@
 
     <data>
 
-        <variable
-            name="item"
-            type="com.ami.batterwatcher.viewmodels.AlertModel" />
-
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -25,31 +21,42 @@
             android:layout_height="match_parent"
             android:background="@drawable/rounded_rectangle_white">
 
-            <ImageView
-                android:id="@+id/imageView_icon1"
+            <de.hdodenhof.circleimageview.CircleImageView
+                android:id="@+id/circular_icon"
                 android:layout_width="@dimen/_30sdp"
                 android:layout_height="@dimen/_30sdp"
                 android:layout_marginStart="@dimen/_10sdp"
                 android:layout_marginLeft="@dimen/_10sdp"
                 android:background="@drawable/circle_blue"
-                android:padding="@dimen/_6sdp"
-                android:src="@drawable/iconfinder_sound"
+                android:src="@drawable/ic_device"
+                app:civ_border_color="@color/dark_gray"
+                app:civ_border_width="1dp"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:tint="@color/white" />
+                app:layout_constraintTop_toTopOf="parent" />
 
             <com.ami.batterwatcher.ui.CustomBoldTV
                 android:id="@+id/textView_text1"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="8dp"
+                android:layout_marginStart="@dimen/_8sdp"
+                android:clickable="true"
+                android:focusable="true"
+                android:layout_marginLeft="@dimen/_8sdp"
+                android:layout_marginEnd="@dimen/_8sdp"
                 android:background="@color/transparent"
-                android:text="Discharging alerts %"
-                android:textColor="@color/orange"
+                android:gravity="left"
+                android:inputType="textMultiLine"
+                android:lines="2"
+                android:maxLines="2"
+                android:singleLine="false"
+                android:text="Buy Tracki #1 best selling GPS tracker on Amazon"
+                android:textColor="@color/red"
                 android:textStyle="bold"
                 app:layout_constraintBottom_toTopOf="@+id/textView_text2"
-                app:layout_constraintLeft_toRightOf="@+id/imageView_icon1"
+                app:layout_constraintEnd_toStartOf="@+id/imageView_icon2"
+                app:layout_constraintLeft_toRightOf="@+id/circular_icon"
+                app:layout_constraintStart_toEndOf="@+id/circular_icon"
                 app:layout_constraintTop_toTopOf="parent" />
 
             <ImageView
@@ -73,8 +80,9 @@
                 android:singleLine="false"
                 android:text="&lt;="
                 android:textColor="@color/orange"
+                android:visibility="gone"
                 app:layout_constraintBottom_toTopOf="@+id/textView_text3"
-                app:layout_constraintLeft_toRightOf="@+id/imageView_icon1"
+                app:layout_constraintLeft_toRightOf="@+id/circular_icon"
                 app:layout_constraintTop_toBottomOf="@+id/textView_text1" />
 
             <com.ami.batterwatcher.ui.CustomTvLight
@@ -86,15 +94,15 @@
                 android:layout_marginEnd="@dimen/_4sdp"
                 android:layout_marginRight="@dimen/_4sdp"
                 android:background="@color/transparent"
-                android:text="@{item.eventString}"
-                android:textColor="@color/orange"
+                android:text="Click here"
+                android:textColor="@color/blue_200"
+                android:visibility="gone"
                 app:layout_constraintBottom_toTopOf="@+id/textView_text3"
                 app:layout_constraintEnd_toStartOf="@+id/imageView_edit"
-                app:layout_constraintLeft_toRightOf="@+id/imageView_icon1"
+                app:layout_constraintLeft_toRightOf="@+id/circular_icon"
                 app:layout_constraintStart_toEndOf="@+id/textView_text2"
                 app:layout_constraintTop_toBottomOf="@+id/textView_text1"
-                app:layout_constraintVertical_bias="0.6"
-                tools:text="xxx" />
+                app:layout_constraintVertical_bias="0.6" />
 
             <com.ami.batterwatcher.ui.CustomTvLight
                 android:id="@+id/textView_text3"
@@ -102,13 +110,12 @@
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="8dp"
                 android:background="@color/transparent"
-                android:text="@{item.description}"
                 android:textColor="@color/black"
                 android:visibility="gone"
                 app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintLeft_toRightOf="@+id/imageView_icon1"
+                app:layout_constraintLeft_toRightOf="@+id/circular_icon"
                 app:layout_constraintTop_toBottomOf="@+id/textView_text2"
-                tools:text="Bat 94 level" />
+                tools:text="" />
 
             <ImageView
                 android:id="@+id/imageView_edit"
@@ -118,6 +125,7 @@
                 android:layout_marginRight="8dp"
                 android:padding="@dimen/_4sdp"
                 android:src="@drawable/ic_baseline_edit_24"
+                android:visibility="gone"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toStartOf="@+id/imageView_icon2"
                 app:layout_constraintTop_toTopOf="parent"
@@ -132,12 +140,14 @@
                 android:layout_marginLeft="@dimen/_10sdp"
                 android:layout_marginEnd="@dimen/_10sdp"
                 android:layout_marginRight="@dimen/_10sdp"
-                android:background="@drawable/circle_green"
+                android:background="@color/transparent"
                 android:padding="@dimen/_4sdp"
-                android:src="@drawable/ic_baseline_battery_charging_not_full2_24"
+                android:src="@drawable/ic_baseline_settings_24"
+                android:visibility="gone"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+                app:layout_constraintTop_toTopOf="parent"
+                app:tint="@color/dark_gray" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 

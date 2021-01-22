@@ -6,6 +6,7 @@
         android:id="@+id/menu_setting"
         android:icon="@drawable/ic_baseline_settings_24"
         android:title="Item"
+        android:visible="false"
         app:showAsAction="always|withText" />
     <item
         android:id="@+id/menu_info"
@@ -14,15 +15,9 @@
         android:visible="false"
         app:showAsAction="always|withText" />
     <item
-        android:id="@+id/menu_add"
-        android:icon="@drawable/ic_baseline_add_24"
-        android:title="Item"
-        android:visible="false"
-        app:showAsAction="always|withText" />
-    <item
         android:id="@+id/menu_more"
-        android:icon="@drawable/ic_baseline_more_vert_24"
-        android:title="Item"
+        android:icon="@drawable/ic_baseline_record_voice_over_24"
+        android:title="Text-to-speech output"
         android:visible="false"
         app:showAsAction="always|withText" />
 </menu>

@@ -25,19 +25,19 @@
             android:layout_height="match_parent"
             android:background="@drawable/rounded_rectangle_white">
 
-            <ImageView
+            <de.hdodenhof.circleimageview.CircleImageView
                 android:id="@+id/imageView_icon1"
                 android:layout_width="@dimen/_30sdp"
                 android:layout_height="@dimen/_30sdp"
                 android:layout_marginStart="@dimen/_10sdp"
                 android:layout_marginLeft="@dimen/_10sdp"
-                android:background="@drawable/circle_blue"
-                android:padding="@dimen/_6sdp"
-                android:src="@drawable/iconfinder_sound"
+                android:background="@color/transparent"
+                android:src="@drawable/ic_tracki_launcher_icon"
+                app:civ_border_color="@color/dark_gray"
+                app:civ_border_width="1dp"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:tint="@color/white" />
+                app:layout_constraintTop_toTopOf="parent" />
 
             <com.ami.batterwatcher.ui.CustomBoldTV
                 android:id="@+id/textView_text1"
@@ -45,8 +45,8 @@
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="8dp"
                 android:background="@color/transparent"
-                android:text="Discharging alerts %"
-                android:textColor="@color/orange"
+                android:text="Get Tracki free GPS tracking app"
+                android:textColor="@color/jungleGreenPrimaryDark"
                 android:textStyle="bold"
                 app:layout_constraintBottom_toTopOf="@+id/textView_text2"
                 app:layout_constraintLeft_toRightOf="@+id/imageView_icon1"
@@ -73,6 +73,7 @@
                 android:singleLine="false"
                 android:text="&lt;="
                 android:textColor="@color/orange"
+                android:visibility="gone"
                 app:layout_constraintBottom_toTopOf="@+id/textView_text3"
                 app:layout_constraintLeft_toRightOf="@+id/imageView_icon1"
                 app:layout_constraintTop_toBottomOf="@+id/textView_text1" />
@@ -88,6 +89,7 @@
                 android:background="@color/transparent"
                 android:text="@{item.eventString}"
                 android:textColor="@color/orange"
+                android:visibility="gone"
                 app:layout_constraintBottom_toTopOf="@+id/textView_text3"
                 app:layout_constraintEnd_toStartOf="@+id/imageView_edit"
                 app:layout_constraintLeft_toRightOf="@+id/imageView_icon1"
@@ -118,6 +120,7 @@
                 android:layout_marginRight="8dp"
                 android:padding="@dimen/_4sdp"
                 android:src="@drawable/ic_baseline_edit_24"
+                android:visibility="gone"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toStartOf="@+id/imageView_icon2"
                 app:layout_constraintTop_toTopOf="parent"
@@ -132,12 +135,14 @@
                 android:layout_marginLeft="@dimen/_10sdp"
                 android:layout_marginEnd="@dimen/_10sdp"
                 android:layout_marginRight="@dimen/_10sdp"
-                android:background="@drawable/circle_green"
+                android:background="@color/transparent"
                 android:padding="@dimen/_4sdp"
-                android:src="@drawable/ic_baseline_battery_charging_not_full2_24"
+                android:src="@drawable/ic_baseline_settings_24"
+                android:visibility="gone"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+                app:layout_constraintTop_toTopOf="parent"
+                app:tint="@color/dark_gray" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 

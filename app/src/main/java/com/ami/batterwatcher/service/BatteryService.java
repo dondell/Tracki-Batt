@@ -43,12 +43,9 @@ public class BatteryService extends Service {
         public void run() {
             //DO WHATEVER YOU WANT WITH LATEST BATTERY LEVEL STORED IN batteryLevel HERE...
             // schedule next battery check
-            int interval = store.getInt(
-                    BaseActivity.checkIntervalOnBatteryServiceLevelChecker,
-                    DEFAULT_CHECK_BATTERY_INTERVAL) * 1000 * 60;
-            handler.postDelayed(checkBatteryStatusRunnable, store != null ? interval
+            handler.postDelayed(checkBatteryStatusRunnable, store != null ? 10000
                     : DEFAULT_CHECK_BATTERY_INTERVAL);
-            Log.e("Battery status is", batteryLevel + "mm cached. Interval: " + interval);
+            Log.e("Battery status is", batteryLevel + "mm cached. Interval: " + 10000);
 
             Intent intent = new Intent("YourAction");
             Bundle bundle = new Bundle();

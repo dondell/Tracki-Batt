@@ -1,18 +1,20 @@
 package com.ami.batterwatcher.view;
 
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.media.AudioManager;
+import android.net.Uri;
 import android.os.BatteryManager;
 import android.os.Build;
 import android.speech.tts.TextToSpeech;
+import android.speech.tts.Voice;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.CompoundButton;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.databinding.DataBindingUtil;
@@ -36,8 +38,10 @@ import com.ami.batterwatcher.viewmodels.ChargeWithPercentageModel;
 import com.ami.batterwatcher.viewmodels.PercentageModel;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 public class MainActivity extends BaseActivity {
 
@@ -50,13 +54,14 @@ public class MainActivity extends BaseActivity {
     private List<ChargeModel> chargeModels;
     private List<ChargeWithPercentageModel> chargeWithPercentageModels;
     private BroadcastReceiver mBatInfoReceiver;
-    private boolean initSuccessfull = false;
+    private boolean initTTSSuccessfull = false;
     private TextToSpeech tts;
     private int currentBattLevel;
     private BatteryManager myBatteryManager;
     private AudioManager audio;
     int currentMusicVolume;
     int currentRingtoneVolume;
+    private Voice defaultTTSVoice;
 
     @Override
     protected int setLayout() {
@@ -124,17 +129,6 @@ public class MainActivity extends BaseActivity {
         startBatteryService();
         myBatteryManager = (BatteryManager) mContext.getSystemService(Context.BATTERY_SERVICE);
 
-        initSuccessfull = false;
-        tts = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
-            @Override
-            public void onInit(int i) {
-                if (i == TextToSpeech.SUCCESS) {
-                    initSuccessfull = true;
-                    log("TTS successfully initialized");
-                }
-            }
-        });
-
         viewDataBinding.includeSetting.getRoot().setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -165,15 +159,44 @@ public class MainActivity extends BaseActivity {
             }
         });
 
-        viewDataBinding.switchService.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                if (b) {
-                    startBatteryService();
-                } else {
-                    stopBatteryService();
-                }
+        viewDataBinding.switchService.setOnCheckedChangeListener((compoundButton, b) -> {
+            if (b) {
+                startBatteryService();
+            } else {
+                stopBatteryService();
             }
+        });
+
+        viewDataBinding.includePromoteTrackiApp.getRoot().setOnClickListener(view -> {
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            intent.setData(Uri.parse(
+                    "https://play.google.com/store/apps/details?id=com.trackimo.android.tracki"));
+            intent.setPackage("com.android.vending");
+            startActivity(intent);
+        });
+
+        viewDataBinding.includeBuyOnAmazon.getRoot().setOnClickListener(view -> {
+            Intent browserIntent = new Intent(Intent.ACTION_VIEW,
+                    Uri.parse("https://amzn.to/2Mijobo"));
+            startActivity(browserIntent);
+        });
+
+        viewDataBinding.includeBuyOnAmazon.textViewText1.setOnClickListener(view -> {
+            Intent browserIntent = new Intent(Intent.ACTION_VIEW,
+                    Uri.parse("https://amzn.to/2Mijobo"));
+            startActivity(browserIntent);
+        });
+
+        viewDataBinding.includeAudiosetting.getRoot().setOnClickListener(view -> {
+            //Text-to-speech output
+            startActivity(Build.VERSION.SDK_INT >= 14 ?
+                    new Intent().setAction("com.android.settings.TTS_SETTINGS")
+                            .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK) :
+                    new Intent().addCategory(Intent.CATEGORY_LAUNCHER)
+                            .setComponent(
+                                    new ComponentName("com.android.settings",
+                                            "com.android.settings.TextToSpeechSettings"))
+                            .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
         });
     }
 
@@ -197,6 +220,10 @@ public class MainActivity extends BaseActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_main, menu);
+        /*MenuItem item = menu.getItem(1);
+        SpannableString s = new SpannableString("My red MenuItem");
+        s.setSpan(new ForegroundColorSpan(Color.RED), 0, s.length(), 0);
+        item.setTitle(s);*/
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -209,11 +236,6 @@ public class MainActivity extends BaseActivity {
             return true;
         } else if (itemId == R.id.menu_info) {
             return true;
-       /* } else if (itemId == R.id.menu_add) {
-            Intent addIntent = new Intent(MainActivity.this, AlertDetailsActivity.class);
-            addIntent.putExtra("screen_type", 1);
-            startActivity(addIntent);
-            return true;*/
         } else if (itemId == R.id.menu_more) {
             return true;
         }
@@ -229,6 +251,7 @@ public class MainActivity extends BaseActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        initializeTTS();
         viewModel.getAll().observe(this, alertModels -> {
             models.clear();
             models.addAll(alertModels);
@@ -268,6 +291,55 @@ public class MainActivity extends BaseActivity {
     @Override
     protected void onPause() {
         super.onPause();
+    }
+
+    private void initializeTTS() {
+        initTTSSuccessfull = false;
+        tts = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
+            @Override
+            public void onInit(int i) {
+                if (i == TextToSpeech.SUCCESS) {
+                    initTTSSuccessfull = true;
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        defaultTTSVoice = tts.getDefaultVoice();
+                    }
+
+                    log("TTS successfully initialized");
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        for (Voice tmpVoice : tts.getVoices()) {
+                            log("tts voice " + tmpVoice.getName());
+                            if (tmpVoice.getName().contains("female")) {
+                                log("found female voice " + tmpVoice.getName());
+                                store.saveString(ttsFemale, tmpVoice.getName());
+                            }
+                            if (tmpVoice.getName().contains("male")) {
+                                log("found male voice " + tmpVoice.getName());
+                                store.saveString(ttsMale, tmpVoice.getName());
+                            }
+                        }
+
+                        Set<String> a = new HashSet<>();
+                        a.add("male");//here you can give male if you want to select male voice.
+                        //Voice v=new Voice("en-us-x-sfg#female_2-local",new Locale("en","US"),400,200,true,a);
+                        Voice v = new Voice(store.getInt(ttsVoiceType, 2) == 1 ?
+                                "en-us-x-sfg#male_2-local" : "es-us-x-sfb#female_1-local",
+                                new Locale("en", "US"),
+                                400, 200, true, a);
+                        int result = tts.setVoice(v);
+                        tts.setSpeechRate(0.8f);
+
+                        if (result == TextToSpeech.LANG_MISSING_DATA
+                                || result == TextToSpeech.LANG_NOT_SUPPORTED) {
+                            log("This Language is not supported");
+                            if (null != defaultTTSVoice)
+                                tts.setVoice(defaultTTSVoice);
+                        }
+
+                    }
+
+                }
+            }
+        });
     }
 
     private class BroadcastReceiver extends android.content.BroadcastReceiver {
@@ -317,55 +389,90 @@ public class MainActivity extends BaseActivity {
         boolean ttsWasPlayed = false;
         boolean isCharging = false;
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (myBatteryManager.isCharging()) {
                 isCharging = true;
             }
         } else if (isCharging(mContext)) {
             isCharging = true;
-        }
+        }*/
+        isCharging = store.getBoolean(BaseActivity.isCharging, false);
+
+        log("isCharging: " + isCharging);
 
         if (chargeWithPercentageModels.size() == 0)
             return;
 
         int storedPreviousBatLevel = store.getInt(previousBatValueKey, -1);
         int arrayIndexToGet = 0;
-        if (isCharging) {
-            arrayIndexToGet = 0;
-
-        } else {
+        if (!isCharging) {
             arrayIndexToGet = 1;
         }
 
         ChargeWithPercentageModel cp = chargeWithPercentageModels.get(arrayIndexToGet);
-        for (PercentageModel p : cp.percentageModels) {
+        for (int j = cp.percentageModels.size() - 1; j >= 0; j--) {
+            PercentageModel prevPercentage = null, nextPercentage = null;
+            //get previous percentage
+            if (j > 0) {
+                prevPercentage = cp.percentageModels.get(j - 1);
+            }
+            //get next to the current percentage
+            if ((j + 1) <= (cp.percentageModels.size() - 1)) {
+                nextPercentage = cp.percentageModels.get(j + 1);
+            }
+            PercentageModel p = cp.percentageModels.get(j);
             if (ttsWasPlayed)
                 return;
             // This will check if the "enable repetition" setting is disabled and battery level = percentage
-            if (!store.getBoolean(enableRepeatedAlertForPercentage, true)
-                    && p.percentage >= currentBattLevel && p.percentage <= currentBattLevel) {
+            if (
+                    (!store.getBoolean(enableRepeatedAlertForPercentage, true)
+                            && p.percentage >= currentBattLevel
+                            && p.percentage <= currentBattLevel
+                            //avoid repetition since we don't have interval checker here
+                            && storedPreviousBatLevel != currentBattLevel
+                    ) ||
+                            (p.percentage >= currentBattLevel
+                                    && p.percentage <= currentBattLevel
+                                    && storedPreviousBatLevel != currentBattLevel
+                            )
+            ) {
                 log("Play tts in with battery level == percentage");
                 store.setInt(previousBatValueKey, currentBattLevel);
                 ttsWasPlayed = true;
-                playTTS(cp.chargeModel.eventString);
+                playTTS(cp.chargeModel.eventString, p.percentage);
             }
             /*
             This will check if previous battery level is not equal to the current level
              */
-            else if (store.getBoolean(enableRepeatedAlertForPercentage, true)
-                    && storedPreviousBatLevel != currentBattLevel
+            if (isCharging
+                    && p.selected
+                    && p.percentage <= currentBattLevel
+                    && (prevPercentage != null && currentBattLevel <= prevPercentage.percentage)
+                    && store.getBoolean(enableRepeatedAlertForPercentage, true)
+                    //&& storedPreviousBatLevel != currentBattLevel
+                    && isTimeIntervalDone()
             ) {
                 log("Play tts in new battery level");
                 store.setInt(previousBatValueKey, currentBattLevel);
                 ttsWasPlayed = true;
-                playTTS(cp.chargeModel.eventString);
+                playTTS(cp.chargeModel.eventString, p.percentage);
+            } else if (!isCharging
+                    && p.selected
+                    && p.percentage >= currentBattLevel
+                    && store.getBoolean(enableRepeatedAlertForPercentage, true)
+                    //&& storedPreviousBatLevel != currentBattLevel
+                    && isTimeIntervalDone()
+            ) {
+                log("Play tts in new battery level");
+                store.setInt(previousBatValueKey, currentBattLevel);
+                ttsWasPlayed = true;
+                playTTS(cp.chargeModel.eventString, p.percentage);
             }
         }
     }
 
-    private void playTTS(String tell) {
-        tts.setLanguage(Locale.US);
-        tts.speak(tell + " " + currentBattLevel, TextToSpeech.QUEUE_ADD, null);
+    private void playTTS(String tell, int percentage) {
+        tts.speak(tell + " " + percentage, TextToSpeech.QUEUE_ADD, null);
         log("playTTS");
 
         //Set volume previous volume level set by user
@@ -374,5 +481,6 @@ public class MainActivity extends BaseActivity {
             audio.setStreamVolume(AudioManager.STREAM_RING, currentRingtoneVolume, 0);
         }
     }
+
 
 }

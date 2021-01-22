@@ -33,11 +33,11 @@
                 android:layout_marginLeft="@dimen/_10sdp"
                 android:background="@drawable/circle_blue"
                 android:padding="@dimen/_6sdp"
-                android:src="@{item.event == 1 ? @drawable/ic_baseline_play_arrow_24: item.event == 2 ? @drawable/ic_baseline_music_note_24 : @drawable/ic_baseline_surround_sound_24}"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                tools:src="@drawable/ic_baseline_surround_sound_24" />
+                app:tint="@color/white"
+                android:src="@drawable/iconfinder_sound" />
 
             <com.ami.batterwatcher.ui.CustomBoldTV
                 android:id="@+id/textView_text1"
@@ -45,12 +45,24 @@
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="8dp"
                 android:background="@color/transparent"
-                android:text="Charging alerts"
+                android:text="Charging alerts %"
                 android:textColor="@color/greenAlpha"
                 android:textStyle="bold"
                 app:layout_constraintBottom_toTopOf="@+id/textView_text2"
                 app:layout_constraintLeft_toRightOf="@+id/imageView_icon1"
                 app:layout_constraintTop_toTopOf="parent" />
+
+            <ImageView
+                android:layout_width="@dimen/_25sdp"
+                android:layout_height="@dimen/_25sdp"
+                android:layout_marginStart="@dimen/_4sdp"
+                android:layout_marginLeft="@dimen/_4sdp"
+                android:src="@drawable/ic_baseline_alarm_off_24"
+                android:visibility="gone"
+                app:layout_constraintBottom_toBottomOf="@+id/textView_text1"
+                app:layout_constraintStart_toEndOf="@+id/textView_text1"
+                app:layout_constraintTop_toTopOf="@+id/textView_text1"
+                app:tint="@color/black" />
 
             <com.ami.batterwatcher.ui.CustomBoldTV
                 android:id="@+id/textView_text2"

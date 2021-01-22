@@ -40,13 +40,17 @@
         <!--<item name="android:textColor">@color/Black</item>-->
         <item name="android:colorButtonNormal">@color/white</item>
         <item name="android:windowActionBarOverlay">true</item>
-        <item name="android:actionMenuTextColor">@color/white</item>
+        <item name="android:actionMenuTextColor">@color/black</item>
+        <item name="android:itemTextAppearance">@style/myCustomMenuTextAppearance</item>
         <item name="android:actionButtonStyle">@style/ActionButtonStyle</item>
         <item name="android:seekBarStyle">@style/seekBarDefaultTheme</item>
         <item name="text_no_background">@style/TextViewNoBgStyleDefault</item>
-        <item name="text_no_background_ligther_color">@style/TextViewNoBgLigtherColorStyleDefault
-        </item>
+        <item name="text_no_background_ligther_color">@style/TextViewNoBgLigtherColorStyleDefault</item>
         <!--        <item name="bottomNavigationStyle">@style/Widget.App.BottomNavigationView</item>-->
+        <item name="alertDialogTheme">@style/AlertDialogTheme</item>
+        <item name="android:timePickerStyle">@style/MyTimePickerLight</item>
+        <item name="android:textColorPrimaryInverse">@android:color/black</item>
+        <item name="android:textColorSecondaryInverse">@color/black</item>
     </style>
 
     <style name="LeicaAppTheme" parent="Theme.AppCompat.Light.NoActionBar">
@@ -530,7 +534,7 @@
 
     <style name="ActionButtonStyle" parent="Widget.AppCompat.ActionButton">
         <item name="android:minWidth">0dip</item>
-        <item name="android:textColor">@color/White</item>
+        <item name="android:textColor">@color/black</item>
         <item name="android:paddingStart">20dip</item>
         <item name="android:paddingEnd">8dip</item>
     </style>
@@ -763,6 +767,23 @@
     <style name="RatingBar" parent="Theme.AppCompat">
         <item name="colorControlNormal">@color/lightGrey</item>
         <item name="colorControlActivated">@color/Goldenrod</item>
+    </style>
+
+    <style name="myCustomMenuTextAppearance" parent="@android:style/TextAppearance.Widget.IconMenu.Item">
+        <item name="android:textColor">@android:color/primary_text_dark</item>
+    </style>
+
+    <style name="AlertDialogTheme" parent="ThemeOverlay.AppCompat.Dialog.Alert">
+        <item name="buttonBarNegativeButtonStyle">@style/NegativeButtonStyle</item>
+        <item name="buttonBarPositiveButtonStyle">@style/PositiveButtonStyle</item>
+    </style>
+
+    <style name="NegativeButtonStyle" parent="Widget.AppCompat.Button.ButtonBar.AlertDialog">
+        <item name="android:textColor">@color/black</item>
+    </style>
+
+    <style name="PositiveButtonStyle" parent="Widget.AppCompat.Button.ButtonBar.AlertDialog">
+        <item name="android:textColor">@color/black</item>
     </style>
 
 
