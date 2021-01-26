@@ -41,10 +41,22 @@
                     <com.ami.batterwatcher.ui.CustomBoldTV
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="@dimen/_10sdp"
+                        android:layout_marginBottom="@dimen/_1sdp"
                         android:gravity="center"
                         android:text="Settings summary"
                         android:textSize="@dimen/_18sdp" />
+
+                    <com.ami.batterwatcher.ui.CustomBoldTV
+                        android:id="@+id/textView_chargingStatus"
+                        android:layout_width="match_parent"
+                        android:gravity="center"
+                        android:layout_height="wrap_content"
+                        android:text="isCharging: true"
+                        android:visibility="visible"
+                        android:textColor="@color/white"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/linearLayout_switch" />
 
                     <include
                         android:id="@+id/include_setting"

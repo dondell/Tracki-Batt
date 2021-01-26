@@ -22,6 +22,12 @@ public class ChargeModel implements Parcelable {
         this.name = name;
     }
 
+    public ChargeModel(long chargeId, String name, String eventString) {
+        this.chargeId = chargeId;
+        this.name = name;
+        this.eventString = eventString;
+    }
+
     public ChargeModel(long chargeId, String name, int event, String eventString) {
         this.chargeId = chargeId;
         this.name = name;

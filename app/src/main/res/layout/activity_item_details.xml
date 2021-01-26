@@ -102,27 +102,27 @@
                             android:layout_height="wrap_content"
                             android:layout_marginEnd="27dp"
                             android:layout_marginRight="27dp"
-                            app:layout_constraintTop_toTopOf="parent"
                             android:layout_weight="1"
                             android:buttonTint="?attr/image_tint_color"
                             android:text="95%"
                             android:textColor="@color/white"
                             android:visibility="gone"
-                            app:layout_constraintEnd_toStartOf="@+id/checkbox_90" />
+                            app:layout_constraintEnd_toStartOf="@+id/checkbox_90"
+                            app:layout_constraintTop_toTopOf="parent" />
 
                         <CheckBox
                             android:id="@+id/checkbox_90"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginEnd="27dp"
-                            app:layout_constraintTop_toTopOf="parent"
                             android:layout_marginRight="27dp"
                             android:layout_weight="1"
                             android:buttonTint="?attr/image_tint_color"
                             android:text="90%"
                             android:textColor="@color/white"
                             android:textSize="@dimen/_15sdp"
-                            app:layout_constraintEnd_toStartOf="@+id/checkbox_80" />
+                            app:layout_constraintEnd_toStartOf="@+id/checkbox_80"
+                            app:layout_constraintTop_toTopOf="parent" />
 
                         <CheckBox
                             android:id="@+id/checkbox_80"
@@ -130,24 +130,24 @@
                             android:layout_height="wrap_content"
                             android:layout_marginEnd="27dp"
                             android:layout_marginRight="27dp"
-                            app:layout_constraintTop_toTopOf="parent"
                             android:layout_weight="1"
                             android:buttonTint="?attr/image_tint_color"
                             android:text="80%"
                             android:textColor="@color/white"
                             android:textSize="@dimen/_15sdp"
-                            app:layout_constraintEnd_toStartOf="@+id/checkbox_70" />
+                            app:layout_constraintEnd_toStartOf="@+id/checkbox_70"
+                            app:layout_constraintTop_toTopOf="parent" />
 
                         <CheckBox
                             android:id="@+id/checkbox_70"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:buttonTint="?attr/image_tint_color"
-                            app:layout_constraintTop_toTopOf="parent"
                             android:text="70%"
                             android:textColor="@color/white"
                             android:textSize="@dimen/_15sdp"
-                            app:layout_constraintEnd_toEndOf="parent" />
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintTop_toTopOf="parent" />
 
 
                         <CheckBox
@@ -244,6 +244,89 @@
 
                     </androidx.constraintlayout.widget.ConstraintLayout>
 
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <TextView
+                            android:id="@+id/textView_text5"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginLeft="8dp"
+                            android:layout_marginTop="@dimen/_15sdp"
+                            android:text="Repetition"
+                            android:textColor="@color/white"
+                            android:textStyle="bold"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent" />
+
+                        <TextView
+                            android:id="@+id/textView_text4"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:layout_marginLeft="8dp"
+                            android:layout_marginTop="@dimen/_4sdp"
+                            android:layout_marginEnd="8dp"
+                            android:layout_marginRight="8dp"
+                            android:text="Set every how many minutes announcement will be repeating after was announced the first time for  a specific percentage interval"
+                            android:textColor="@color/white"
+                            android:textSize="@dimen/_10sdp"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toBottomOf="@id/textView_text5" />
+
+                        <LinearLayout
+                            android:id="@+id/linearLayout_interval"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal"
+                            android:padding="@dimen/_8sdp"
+                            app:layout_constraintTop_toBottomOf="@+id/textView_text4">
+
+                            <com.ami.batterwatcher.ui.CustomEditText
+                                android:id="@+id/editText_interval"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="@dimen/_10sdp"
+                                android:layout_marginLeft="@dimen/_10sdp"
+                                android:layout_weight="1"
+                                android:background="@drawable/edit_text_bg"
+                                android:inputType="number"
+                                android:padding="10dp"
+                                android:textColor="@color/black"
+                                app:layout_constraintBottom_toBottomOf="parent"
+                                app:layout_constraintStart_toStartOf="parent"
+                                app:layout_constraintTop_toTopOf="parent" />
+
+                            <Button
+                                android:id="@+id/button_interval"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="@dimen/_15sdp"
+                                android:layout_marginLeft="@dimen/_15sdp"
+                                android:layout_weight="1"
+                                android:background="@drawable/button_selector"
+                                android:orientation="vertical"
+                                android:text="Set"
+                                android:textColor="@color/white" />
+
+                        </LinearLayout>
+
+                        <CheckBox
+                            android:id="@+id/checkbox_enableNotificationSoundRepetition"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="@dimen/_8sdp"
+                            android:layout_marginLeft="@dimen/_8sdp"
+                            android:buttonTint="?attr/image_tint_color"
+                            android:text="Enable notification sound repetition"
+                            android:textColor="@color/white"
+                            app:layout_constraintTop_toBottomOf="@+id/linearLayout_interval" />
+
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+
                 </LinearLayout>
 
                 <TextView
@@ -251,6 +334,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginLeft="8dp"
+                    android:layout_marginTop="@dimen/_4sdp"
                     android:text="Event"
                     android:textColor="@color/white"
                     android:textStyle="bold"
@@ -306,7 +390,8 @@
                             android:layout_marginStart="@dimen/_4sdp"
                             android:background="@drawable/button_selector"
                             android:text="File Explorer"
-                            android:textColor="@color/white" />
+                            android:textColor="@color/white"
+                            android:layout_marginLeft="@dimen/_4sdp" />
 
                     </LinearLayout>
 

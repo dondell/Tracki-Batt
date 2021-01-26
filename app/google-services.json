@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "552178840618",
+    "project_id": "tracki-batt",
+    "storage_bucket": "tracki-batt.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:552178840618:android:dee404ead4ada05cf2ff53",
+        "android_client_info": {
+          "package_name": "com.ami.batterwatcher"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "552178840618-h3rmatanm4nbhjcso9artg0v53ungkae.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDGyWkfNbMbPlukOOkXVJIuoTlLOxbTdY0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "552178840618-h3rmatanm4nbhjcso9artg0v53ungkae.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

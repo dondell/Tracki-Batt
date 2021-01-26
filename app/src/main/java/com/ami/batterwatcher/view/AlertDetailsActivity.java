@@ -20,6 +20,9 @@ import com.ami.batterwatcher.viewmodels.ChargeModel;
 import com.ami.batterwatcher.viewmodels.PercentageModel;
 
 import java.util.List;
+import java.util.Locale;
+
+import static com.ami.batterwatcher.service.BatteryService.DEFAULT_CHECK_BATTERY_INTERVAL;
 
 public class AlertDetailsActivity extends BaseActivity {
 
@@ -52,7 +55,7 @@ public class AlertDetailsActivity extends BaseActivity {
                 chargeModel = getIntent().getParcelableExtra("data");
                 if (screen_type == 3) {
                     chargeModel.event = 3;
-                } else if(screen_type == 4) {
+                } else if (screen_type == 4) {
                     chargeModel.event = 3;
                 }
                 viewDataBinding.setVariable(BR.chargeModel, chargeModel);
@@ -87,7 +90,16 @@ public class AlertDetailsActivity extends BaseActivity {
             chargeModelId = 2;
             percentageViewModel.getAllDischargingItems().observe(this, this::setCheckBoxes);
         }
-
+        viewDataBinding.editTextInterval.setText(
+                String.format(Locale.US, "%d",
+                        store.getInt(screen_type == 3 ?
+                                        checkIntervalOnBatteryServiceLevelCheckerForCharging :
+                                        checkIntervalOnBatteryServiceLevelCheckerForDisCharging,
+                                DEFAULT_CHECK_BATTERY_INTERVAL / 1000)));
+        viewDataBinding.checkboxEnableNotificationSoundRepetition.setChecked(
+                store.getBoolean(screen_type == 3 ?
+                        enableRepeatedAlertForPercentageForCharging :
+                        enableRepeatedAlertForPercentageForDisCharging, true));
     }
 
     private void setCheckBoxes(List<PercentageModel> list) {
@@ -149,6 +161,23 @@ public class AlertDetailsActivity extends BaseActivity {
                 percentageViewModel.insert(new PercentageModel(screen_type == 3 ? 12 : 25, 7, chargeModelId, b)));
         viewDataBinding.checkbox3.setOnCheckedChangeListener((compoundButton, b) ->
                 percentageViewModel.insert(new PercentageModel(screen_type == 3 ? 13 : 26, 3, chargeModelId, b)));
+
+        viewDataBinding.checkboxEnableNotificationSoundRepetition
+                .setOnCheckedChangeListener((compoundButton, b) -> {
+                    store.setBoolean(screen_type == 3 ?
+                            enableRepeatedAlertForPercentageForCharging :
+                            enableRepeatedAlertForPercentageForDisCharging, b);
+                });
+        viewDataBinding.buttonInterval.setOnClickListener(view -> {
+            if (!TextUtils.isEmpty(viewDataBinding.editTextInterval.getText().toString())) {
+                store.setInt(screen_type == 3 ?
+                                checkIntervalOnBatteryServiceLevelCheckerForCharging :
+                                checkIntervalOnBatteryServiceLevelCheckerForDisCharging,
+                        Integer.parseInt(viewDataBinding.editTextInterval.getText().toString()));
+                showDialogOkButton("Interval set successfully!");
+            }
+        });
+
         viewDataBinding.radioGroup2.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(RadioGroup radioGroup, int i) {

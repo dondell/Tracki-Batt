@@ -1,29 +1,75 @@
 package com.ami.batterwatcher.service;
 
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.media.AudioManager;
 import android.os.BatteryManager;
-import android.os.Bundle;
+import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
-import android.util.Log;
+import android.speech.tts.TextToSpeech;
+import android.speech.tts.Voice;
+import android.text.TextUtils;
 
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
+import androidx.core.app.NotificationCompat;
+import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProvider;
 
+import com.ami.batterwatcher.R;
 import com.ami.batterwatcher.base.BaseActivity;
+import com.ami.batterwatcher.data.ChargeViewModel;
 import com.ami.batterwatcher.util.PrefStore;
+import com.ami.batterwatcher.view.MainActivity;
+import com.ami.batterwatcher.viewmodels.ChargeWithPercentageModel;
+import com.ami.batterwatcher.viewmodels.PercentageModel;
+
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.List;
+import java.util.Locale;
+
+import static com.ami.batterwatcher.base.BaseActivity.checkIntervalOnBatteryServiceLevelCheckerForCharging;
+import static com.ami.batterwatcher.base.BaseActivity.checkIntervalOnBatteryServiceLevelCheckerForDisCharging;
+import static com.ami.batterwatcher.base.BaseActivity.checkModifyMaxVolumePermissionNoPrompt;
+import static com.ami.batterwatcher.base.BaseActivity.disableAlertDuringCall;
+import static com.ami.batterwatcher.base.BaseActivity.enableRepeatedAlertForPercentageForCharging;
+import static com.ami.batterwatcher.base.BaseActivity.enableRepeatedAlertForPercentageForDisCharging;
+import static com.ami.batterwatcher.base.BaseActivity.ignoreSystemAudioProfile;
+import static com.ami.batterwatcher.base.BaseActivity.isSwitchOff;
+import static com.ami.batterwatcher.base.BaseActivity.isTimeInBetweenSleepMode;
+import static com.ami.batterwatcher.base.BaseActivity.isTimeIntervalDone;
+import static com.ami.batterwatcher.base.BaseActivity.logStatic;
+import static com.ami.batterwatcher.base.BaseActivity.playSoundWithMaxVolume;
+import static com.ami.batterwatcher.base.BaseActivity.previousBatValueKey;
+import static com.ami.batterwatcher.base.BaseActivity.startTimeLong;
+import static com.ami.batterwatcher.base.BaseActivity.stopTimeLong;
 
 public class BatteryService extends Service {
 
     public static final int DEFAULT_CHECK_BATTERY_INTERVAL = 10000;
     private static final int CHECK_BATTERY_INTERVAL = DEFAULT_CHECK_BATTERY_INTERVAL;
 
-    private double batteryLevel;
+    private double currentBattLevel;
     private Handler handler;
     private PrefStore store;
+    private static final int ID_SERVICE = 104;
+    private TextToSpeech tts;
+    private Voice defaultTTSVoice;
+    private boolean initTTSSuccessfull = false;
+    private AudioManager audio;
+    private int currentMusicVolume;
+    private int currentRingtoneVolume;
+    private List<ChargeWithPercentageModel> chargeWithPercentageModels;
+    private ChargeViewModel chargeViewModel;
 
     private BroadcastReceiver batInfoReceiver = new BroadcastReceiver() {
         @Override
@@ -32,7 +78,7 @@ public class BatteryService extends Service {
             int scale = batteryIntent.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
 
             if (rawlevel >= 0 && scale > 0) {
-                batteryLevel = (rawlevel * 100.0) / scale;
+                currentBattLevel = (rawlevel * 100.0) / scale;
             }
             //Log.e("xxx Battery status is", "xxx " + batteryLevel + "mm");
         }
@@ -45,26 +91,90 @@ public class BatteryService extends Service {
             // schedule next battery check
             handler.postDelayed(checkBatteryStatusRunnable, store != null ? 10000
                     : DEFAULT_CHECK_BATTERY_INTERVAL);
-            Log.e("Battery status is", batteryLevel + "mm cached. Interval: " + 10000);
+            logStatic("Battery status is " + currentBattLevel + "mm cached. Interval: " + 10000);
 
+            /*
+            //This will only work if activity is running. So we fully transfer inside this service.
             Intent intent = new Intent("YourAction");
             Bundle bundle = new Bundle();
             bundle.putInt("batteryLevel", (int) batteryLevel);
             intent.putExtras(bundle);
-            LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
+            LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);*/
+
+            int storedPreviousBatLevel = store.getInt(previousBatValueKey, -1);
+            //If no stored battery value, then save the current battery level
+            if (storedPreviousBatLevel == -1) {
+                store.setInt(previousBatValueKey, (int) currentBattLevel);
+            }
+            //Only play the TTS if the current battery level is not the same as previous battery level
+            if (storedPreviousBatLevel != -1) {
+                //Only alert if time is not in between sleep mode
+                Calendar nowCal = Calendar.getInstance();
+                if (!isTimeInBetweenSleepMode(
+                        store.getLong(startTimeLong), nowCal.getTimeInMillis(),
+                        store.getLong(stopTimeLong))) {
+                    checkRulesOnTheList();
+                }
+            } else
+                logStatic("Previous battery level " + storedPreviousBatLevel + " is the same as current level " + currentBattLevel);
+
+            /*if (store.getBoolean(isSwitchOff)) {
+                stopForeground(true);
+            }*/
+
         }
     };
 
     @Override
     public void onCreate() {
+        logStatic("BatteryService is now created");
         store = new PrefStore(this);
         handler = new Handler();
         handler.postDelayed(checkBatteryStatusRunnable, CHECK_BATTERY_INTERVAL);
+
+        store.setBoolean(isSwitchOff, false);
+        audio = (AudioManager) this.getSystemService(Context.AUDIO_SERVICE);
+
+        chargeWithPercentageModels = new ArrayList<>();
+        chargeViewModel = new ViewModelProvider.AndroidViewModelFactory(getApplication()).create(ChargeViewModel.class);
+        Observer<List<ChargeWithPercentageModel>> obsEntries = new Observer<List<ChargeWithPercentageModel>>() {
+            @Override
+            public void onChanged(@Nullable List<ChargeWithPercentageModel> entries) {
+                chargeWithPercentageModels.clear();
+                for (ChargeWithPercentageModel cwpm : entries) {
+                    //let's only include percentage that is active in the checking
+                    List<PercentageModel> npm = new ArrayList<>();
+                    for (PercentageModel pm : cwpm.percentageModels) {
+                        if (pm.selected)
+                            npm.add(pm);
+                    }
+                    cwpm.percentageModels.clear();
+                    cwpm.percentageModels.addAll(npm);
+                    chargeWithPercentageModels.add(cwpm);
+                }
+                if (entries.size() > 0) {
+                    StringBuilder sb1 = new StringBuilder();
+                    StringBuilder sb2 = new StringBuilder();
+                    for (PercentageModel p1 : entries.get(0).percentageModels) {
+                        if (p1.selected)
+                            sb1.append(p1.percentage).append(",");
+                    }
+                    for (PercentageModel p2 : entries.get(1).percentageModels) {
+                        if (p2.selected)
+                            sb2.append(p2.percentage).append(",");
+                    }
+                }
+            }
+        };
+        chargeViewModel.getAllChargeWithPercentageSets().observeForever(obsEntries);
+
         registerReceiver(batInfoReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+        initializeTTS();
     }
 
     @Override
     public void onDestroy() {
+        logStatic("BatteryService is now destroyed");
         unregisterReceiver(batInfoReceiver);
         handler.removeCallbacks(checkBatteryStatusRunnable);
     }
@@ -76,6 +186,249 @@ public class BatteryService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        showForegroundNotification();
         return START_STICKY;
     }
+
+    private void showForegroundNotification() {
+        Intent notificationIntent = new Intent(this, MainActivity.class);
+        notificationIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP |
+                Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        PendingIntent mainDashboardIntent = PendingIntent.getActivity(this,
+                0, notificationIntent, 0);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            String channelId = createNotificationChannel(notificationManager);
+            NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, channelId);
+
+            Notification notification = notificationBuilder.setOngoing(true)
+                    .setSmallIcon(R.drawable.ic_tracki_launcher_icon)
+                    .setTicker("Hearty365")
+                    .setPriority(Notification.PRIORITY_DEFAULT)
+                    .setContentTitle("Tracki Batt Notification")
+                    .setContentText("Tracki Batt is running in background to stay connected.")
+                    .setCategory(NotificationCompat.CATEGORY_SERVICE)
+                    .setContentIntent(mainDashboardIntent)
+                    .build();
+            startForeground(ID_SERVICE, notification);
+        } else {
+            Notification notification = new NotificationCompat.Builder(this, "Channel01")
+                    .setContentTitle("Tracki Batt")
+                    .setContentText("Tracki Batt is working in background")
+                    .setSmallIcon(R.drawable.ic_tracki_launcher_icon)
+                    .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                    .setContentIntent(mainDashboardIntent)
+                    .build();
+            startForeground(ID_SERVICE, notification);
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private String createNotificationChannel(NotificationManager notificationManager) {
+        String channelId = "my_service_channelid";
+        String channelName = "My Foreground Service";
+        NotificationChannel channel = new NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_HIGH);
+        // omitted the LED color
+        channel.setImportance(NotificationManager.IMPORTANCE_NONE);
+        channel.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
+        notificationManager.createNotificationChannel(channel);
+        return channelId;
+    }
+
+    private void initializeTTS() {
+        initTTSSuccessfull = false;
+        tts = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
+            @Override
+            public void onInit(int i) {
+                if (i == TextToSpeech.SUCCESS) {
+                    initTTSSuccessfull = true;
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        defaultTTSVoice = tts.getDefaultVoice();
+                    }
+
+                    /*logStatic("TTS successfully initialized");
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        for (Voice tmpVoice : tts.getVoices()) {
+                            //logStatic("tts voice " + tmpVoice.getName());
+                            if (tmpVoice.getName().contains("female")) {
+                                //logStatic("found female voice " + tmpVoice.getName());
+                                store.saveString(ttsFemale, tmpVoice.getName());
+                            }
+                            if (tmpVoice.getName().contains("male")) {
+                                //logStatic("found male voice " + tmpVoice.getName());
+                                store.saveString(ttsMale, tmpVoice.getName());
+                            }
+                        }
+
+                        Set<String> a = new HashSet<>();
+                        a.add("male");//here you can give male if you want to select male voice.
+                        //Voice v=new Voice("en-us-x-sfg#female_2-local",new Locale("en","US"),400,200,true,a);
+                        Voice v = new Voice(store.getInt(ttsVoiceType, 2) == 1 ?
+                                "en-us-x-sfg#male_2-local" : "es-us-x-sfb#female_1-local",
+                                new Locale("en", "US"),
+                                400, 200, true, a);
+                        int result = tts.setVoice(v);
+                        tts.setSpeechRate(0.8f);
+
+                        if (result == TextToSpeech.LANG_MISSING_DATA
+                                || result == TextToSpeech.LANG_NOT_SUPPORTED) {
+                            logStatic("This Language is not supported");
+                            if (null != defaultTTSVoice)
+                                tts.setVoice(defaultTTSVoice);
+                        }
+
+                    }*/
+
+                }
+            }
+        });
+    }
+
+    private void checkRulesOnTheList() {
+        if (store.getBoolean(isSwitchOff, false)) {
+            logStatic("Switch is off");
+            return;
+        }
+
+        //Check if user check disable during call settings
+        if (store.getBoolean(disableAlertDuringCall, true)
+                && isCallActive(getApplicationContext())) {
+            logStatic("Alert is off because you are in active call");
+            return;
+        }
+
+        //Check if user enable max volume for Alert
+        if (store.getBoolean(ignoreSystemAudioProfile, false)) {
+            if (checkModifyMaxVolumePermissionNoPrompt(this)) {
+                if (store.getBoolean(playSoundWithMaxVolume)) {
+                    int maxMusicVolume = audio.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+                    int maxRingVolume = audio.getStreamMaxVolume(AudioManager.STREAM_NOTIFICATION);
+                    audio.setRingerMode(AudioManager.RINGER_MODE_NORMAL);
+                    audio.setStreamVolume(AudioManager.STREAM_MUSIC, maxMusicVolume,
+                            AudioManager.FLAG_REMOVE_SOUND_AND_VIBRATE);
+                    audio.setStreamVolume(AudioManager.STREAM_RING, maxRingVolume, 0);
+                }
+            }
+        }
+
+        boolean ttsWasPlayed = false;
+        boolean isCharging = false;
+
+        //isCharging = store.getBoolean(BaseActivity.isCharging, false);
+        isCharging = BaseActivity.isCharging(getApplicationContext());
+        String isEnableRepeatitionKeyStore = isCharging ?
+                enableRepeatedAlertForPercentageForCharging :
+                enableRepeatedAlertForPercentageForDisCharging;
+        String checkIntervalOnBatteryServiceLevelCheckerKeyStore = isCharging ?
+                checkIntervalOnBatteryServiceLevelCheckerForCharging :
+                checkIntervalOnBatteryServiceLevelCheckerForDisCharging;
+
+        logStatic("isCharging: " + isCharging);
+
+        if (chargeWithPercentageModels.size() == 0)
+            return;
+
+        int storedPreviousBatLevel = store.getInt(previousBatValueKey, -1);
+        int arrayIndexToGet = 0;
+        if (!isCharging) {
+            arrayIndexToGet = 1;
+        }
+
+        ChargeWithPercentageModel cp = chargeWithPercentageModels.get(arrayIndexToGet);
+        for (int j = cp.percentageModels.size() - 1; j >= 0; j--) {
+            PercentageModel prevPercentage = null, nextPercentage = null;
+            //get previous percentage
+            if (j > 0) {
+                prevPercentage = cp.percentageModels.get(j - 1);
+            }
+            //get next to the current percentage
+            if ((j + 1) <= (cp.percentageModels.size() - 1)) {
+                nextPercentage = cp.percentageModels.get(j + 1);
+            }
+            PercentageModel p = cp.percentageModels.get(j);
+            if (ttsWasPlayed)
+                return;
+            // This will check if the "enable repetition" setting is disabled and battery level = percentage
+            /*if (
+                    (!store.getBoolean(isEnableRepeatitionKeyStore, true)
+                            && p.percentage >= currentBattLevel
+                            && p.percentage <= currentBattLevel
+                            && isTimeIntervalDone(store, checkIntervalOnBatteryServiceLevelCheckerKeyStore)
+                    ) ||
+                            (p.percentage >= currentBattLevel
+                                    && p.percentage <= currentBattLevel
+                                    && storedPreviousBatLevel != currentBattLevel
+                            )
+            ) {
+                logStatic("Play tts in with battery level == percentage");
+                store.setInt(previousBatValueKey, (int) currentBattLevel);
+                ttsWasPlayed = true;
+                playTTS(cp.chargeModel.eventString, p.percentage);
+            }*/
+            /*
+            This will check if previous battery level is not equal to the current level
+             */
+            if (isCharging
+                    && p.selected
+                    && p.percentage <= currentBattLevel &&
+                    (
+                            (prevPercentage != null && currentBattLevel <= prevPercentage.percentage)
+                                    || (prevPercentage == null && currentBattLevel >= p.percentage)
+                    )
+                    && store.getBoolean(isEnableRepeatitionKeyStore, true)
+                    && isTimeIntervalDone(store, checkIntervalOnBatteryServiceLevelCheckerKeyStore)
+            ) {
+                logStatic("Play tts in new battery level");
+                store.setInt(previousBatValueKey, (int) currentBattLevel);
+                ttsWasPlayed = true;
+                playTTS(cp.chargeModel.eventString, p.percentage);
+            } else if (!isCharging
+                    && p.selected
+                    && p.percentage >= currentBattLevel
+                    && store.getBoolean(isEnableRepeatitionKeyStore, true)
+                    && isTimeIntervalDone(store, checkIntervalOnBatteryServiceLevelCheckerKeyStore)
+            ) {
+                logStatic("Play tts in new battery level");
+                store.setInt(previousBatValueKey, (int) currentBattLevel);
+                ttsWasPlayed = true;
+                playTTS(cp.chargeModel.eventString, p.percentage);
+            }
+        }
+    }
+
+    private void playTTS(String tell, int percentage) {
+        logStatic("playTTS: " + tell);
+        //Set volume previous volume level set by user
+        if (checkModifyMaxVolumePermissionNoPrompt(getApplicationContext())
+                && store.getBoolean(ignoreSystemAudioProfile, true)) {
+            audio = (AudioManager) this.getSystemService(Context.AUDIO_SERVICE);
+            currentMusicVolume = audio.getStreamVolume(AudioManager.STREAM_MUSIC);
+            currentRingtoneVolume = audio.getStreamVolume(AudioManager.STREAM_RING);
+            //set to max volume
+            int maxMusicVolume = audio.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+            int maxRingVolume = audio.getStreamMaxVolume(AudioManager.STREAM_NOTIFICATION);
+            audio.setRingerMode(AudioManager.RINGER_MODE_NORMAL);
+            audio.setStreamVolume(AudioManager.STREAM_MUSIC, maxMusicVolume,
+                    AudioManager.FLAG_REMOVE_SOUND_AND_VIBRATE);
+            audio.setStreamVolume(AudioManager.STREAM_RING, maxRingVolume, 0);
+        }
+
+        tts.setLanguage(Locale.US);
+        if (TextUtils.isEmpty(tell) || tell.equalsIgnoreCase("null"))
+            tts.speak("" + percentage, TextToSpeech.QUEUE_ADD, null);
+        else {
+            tts.speak(tell + " " + percentage, TextToSpeech.QUEUE_ADD, null);
+        }
+        //set to user volume
+        audio.setStreamVolume(AudioManager.STREAM_MUSIC, currentMusicVolume,
+                AudioManager.FLAG_REMOVE_SOUND_AND_VIBRATE);
+        audio.setStreamVolume(AudioManager.STREAM_RING, currentRingtoneVolume, 0);
+    }
+
+    public boolean isCallActive(Context context) {
+        AudioManager manager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+        return manager.getMode() == AudioManager.MODE_IN_CALL;
+    }
+
 }

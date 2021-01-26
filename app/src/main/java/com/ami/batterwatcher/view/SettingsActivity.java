@@ -1,14 +1,11 @@
 package com.ami.batterwatcher.view;
 
-import android.app.TimePickerDialog;
 import android.content.Context;
 import android.os.Build;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.Voice;
-import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.TimePicker;
 
 import androidx.databinding.DataBindingUtil;
 
@@ -20,8 +17,6 @@ import java.util.Calendar;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
-
-import static com.ami.batterwatcher.service.BatteryService.DEFAULT_CHECK_BATTERY_INTERVAL;
 
 public class SettingsActivity extends BaseActivity {
     private ActivitySettingsBinding viewDataBinding;
@@ -46,12 +41,6 @@ public class SettingsActivity extends BaseActivity {
     protected void setViews() {
         showBackButton(true);
         setActivityTitle("Settings");
-        viewDataBinding.editTextInterval.setText(
-                String.format(Locale.US, "%d",
-                        store.getInt(checkIntervalOnBatteryServiceLevelChecker,
-                                DEFAULT_CHECK_BATTERY_INTERVAL / 1000)));
-        viewDataBinding.checkboxEnableNotificationSoundRepetition.setChecked(
-                store.getBoolean(enableRepeatedAlertForPercentage, true));
         viewDataBinding.checkboxAudioProfile.setChecked(
                 store.getBoolean(ignoreSystemAudioProfile, true));
         viewDataBinding.checkboxPlayMaxVolume.setChecked(
@@ -69,37 +58,41 @@ public class SettingsActivity extends BaseActivity {
     @Override
     protected void setListeners() {
         viewDataBinding.linearLayoutStartTime.setOnClickListener(view -> {
-            showTimePicker(new TimePicker.OnTimeChangedListener() {
-                @Override
-                public void onTimeChanged(TimePicker timePicker, int hourOfDay,
-                                          int selectedMinute) {
-                    viewDataBinding.textViewStartTime.
-                            setText(convertTimePickerTime(hourOfDay, selectedMinute));
-                    store.setInt(startTimeHr, hourOfDay);
-                    store.setInt(startTimeMn, selectedMinute);
-                }
+            showTimePicker((timePicker, hourOfDay, selectedMinute) -> {
+                viewDataBinding.textViewStartTime.
+                        setText(convertTimePickerTime(hourOfDay, selectedMinute));
+                store.setInt(startTimeHr, hourOfDay);
+                store.setInt(startTimeMn, selectedMinute);
+
+                final Calendar calendar = Calendar.getInstance();
+                calendar.set(Calendar.HOUR_OF_DAY, hourOfDay);
+                calendar.set(Calendar.MINUTE, selectedMinute);
+                calendar.set(Calendar.SECOND, 0);
+                calendar.set(Calendar.MILLISECOND, 0);
+
+                long millis = calendar.getTimeInMillis();
+                store.saveLong(startTimeLong, millis);
             });
         });
 
         viewDataBinding.linearLayoutEndTime.setOnClickListener(view -> {
-            /*Calendar mcurrentTime = Calendar.getInstance();
-            int hour = mcurrentTime.get(Calendar.HOUR_OF_DAY);
-            int minute = mcurrentTime.get(Calendar.MINUTE);*/
-            showTimePicker(new TimePicker.OnTimeChangedListener() {
-                @Override
-                public void onTimeChanged(TimePicker timePicker, int hourOfDay,
-                                          int selectedMinute) {
-                    viewDataBinding.textViewEndTime.
-                            setText(convertTimePickerTime(hourOfDay, selectedMinute));
-                    store.setInt(stopTimeHr, hourOfDay);
-                    store.setInt(stopTimeMn, selectedMinute);
-                }
+            showTimePicker((timePicker, hourOfDay, selectedMinute) -> {
+                viewDataBinding.textViewEndTime.
+                        setText(convertTimePickerTime(hourOfDay, selectedMinute));
+                store.setInt(stopTimeHr, hourOfDay);
+                store.setInt(stopTimeMn, selectedMinute);
+
+                final Calendar calendar = Calendar.getInstance();
+                calendar.set(Calendar.HOUR_OF_DAY, hourOfDay);
+                calendar.set(Calendar.MINUTE, selectedMinute);
+                calendar.set(Calendar.SECOND, 0);
+                calendar.set(Calendar.MILLISECOND, 0);
+
+                long millis = calendar.getTimeInMillis();
+                store.saveLong(stopTimeLong, millis);
             });
         });
 
-        viewDataBinding.checkboxEnableNotificationSoundRepetition.setOnCheckedChangeListener((compoundButton, b) -> {
-            store.setBoolean(enableRepeatedAlertForPercentage, b);
-        });
         viewDataBinding.checkboxAudioProfile.setOnCheckedChangeListener((compoundButton, b) -> {
             if (checkModifyMaxVolumePermission()) {
                 store.setBoolean(ignoreSystemAudioProfile, b);
@@ -110,17 +103,6 @@ public class SettingsActivity extends BaseActivity {
         });
         viewDataBinding.checkboxDisableDuringCall.setOnCheckedChangeListener((compoundButton, b) -> {
             store.setBoolean(disableAlertDuringCall, b);
-        });
-
-        viewDataBinding.buttonInterval.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (!TextUtils.isEmpty(viewDataBinding.editTextInterval.getText().toString())) {
-                    store.setInt(checkIntervalOnBatteryServiceLevelChecker,
-                            Integer.parseInt(viewDataBinding.editTextInterval.getText().toString()));
-                    showDialogOkButton("Interval set successfully!");
-                }
-            }
         });
 
         viewDataBinding.radioButtonMale.setOnCheckedChangeListener(((compoundButton, b) -> {

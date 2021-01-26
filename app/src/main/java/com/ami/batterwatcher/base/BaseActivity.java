@@ -1,5 +1,6 @@
 package com.ami.batterwatcher.base;
 
+import android.app.ActivityManager;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -41,16 +42,20 @@ public abstract class BaseActivity extends AppCompatActivity {
     public static final String isSwitchOff = "isSwitchOff";//boolean
     public static final String startTimeValueKey = "startTimeValueKey";//time
     public static final String endTimeValueKey = "endTimeValueKey";//time
-    public static final String enableRepeatedAlertForPercentage = "enableRepeatedAlertForPercentage";//boolean This will repeat TTS
-    public static final String checkIntervalOnBatteryServiceLevelChecker = "checkIntervalOnBatteryServiceLevelChecker";//int in minute
+    public static final String enableRepeatedAlertForPercentageForCharging = "enableRepeatedAlertForPercentage";//boolean This will repeat TTS
+    public static final String enableRepeatedAlertForPercentageForDisCharging = "enableRepeatedAlertForPercentageForDisCharging";//boolean This will repeat TTS
+    public static final String checkIntervalOnBatteryServiceLevelCheckerForCharging = "checkIntervalOnBatteryServiceLevelChecker";//int in minute
+    public static final String checkIntervalOnBatteryServiceLevelCheckerForDisCharging = "checkIntervalOnBatteryServiceLevelCheckerForDisCharging";//int in minute
     public static final String timeStampAlertLastPlayed = "timeStampAlertLastPlayed";//long Time when the last time alert was sounded
     public static final String ignoreSystemAudioProfile = "ignoreSystemAudioProfile";//boolean
     public static final String playSoundWithMaxVolume = "playSoundWithMaxVolume";//boolean
     public static final String disableAlertDuringCall = "disableAlertDuringCall";//boolean
     public static final String startTimeHr = "startTimeHr";//int
     public static final String startTimeMn = "startTimeMn";//int
+    public static final String startTimeLong = "startTimeLong";//long
     public static final String stopTimeHr = "stopTimeHr";//int
     public static final String stopTimeMn = "stopTimeMn";//int
+    public static final String stopTimeLong = "stopTimeLong";//long
     public static final String ttsVoiceType = "ttsVoiceType"; //int 1=male, 2=female
     public static final String isCharging = "isCharging";//boolean
     public static final String ttsFemale = "ttsFemale";//String
@@ -132,10 +137,24 @@ public abstract class BaseActivity extends AppCompatActivity {
         alert.show();
     }
 
-    public boolean isCharging(Context context) {
-        Intent intent = context.registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+    public static boolean isCharging(Context context) {
+        /*Intent intent = context.registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
         int plugged = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
-        return plugged == BatteryManager.BATTERY_PLUGGED_AC || plugged == BatteryManager.BATTERY_PLUGGED_USB || plugged == BatteryManager.BATTERY_PLUGGED_WIRELESS;
+        return plugged == BatteryManager.BATTERY_PLUGGED_AC || plugged == BatteryManager.BATTERY_PLUGGED_USB || plugged == BatteryManager.BATTERY_PLUGGED_WIRELESS;*/
+
+        IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+        Intent batteryStatus = context.registerReceiver(null, ifilter);
+
+        // Are we charging / charged?
+        int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
+        boolean isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING ||
+                status == BatteryManager.BATTERY_STATUS_FULL;
+
+        // How are we charging?
+        int chargePlug = batteryStatus.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
+        boolean usbCharge = chargePlug == BatteryManager.BATTERY_PLUGGED_USB;
+        boolean acCharge = chargePlug == BatteryManager.BATTERY_PLUGGED_AC;
+        return isCharging || usbCharge || acCharge;
     }
 
     public boolean isCallActive(Context context) {
@@ -146,6 +165,20 @@ public abstract class BaseActivity extends AppCompatActivity {
     public boolean checkModifyMaxVolumePermissionNoPrompt() {
         NotificationManager notificationManager =
                 (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+        boolean notifPermissionGranted = true;
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+                && !notificationManager.isNotificationPolicyAccessGranted()) {
+            notifPermissionGranted = false;
+        }
+
+        return notifPermissionGranted;
+    }
+
+    public static boolean checkModifyMaxVolumePermissionNoPrompt(Context mContext) {
+        NotificationManager notificationManager =
+                (NotificationManager) mContext.getSystemService(Context.NOTIFICATION_SERVICE);
 
         boolean notifPermissionGranted = true;
 
@@ -202,18 +235,7 @@ public abstract class BaseActivity extends AppCompatActivity {
         return curMillis;
     }
 
-    public boolean isTimeIntervalDone() {
-        /*String oldTime = "05.01.2011, 12:45";
-        Date oldDate = null;
-        try {
-            oldDate = formatter.parse(oldTime);
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
-        if (oldDate != null) {
-            long oldMillis = oldDate.getTime();
-        }*/
-
+    public boolean isTimeIntervalDone(String intervalToCheckInMinutesKeyStore) {
         Date curDate = new Date();
         int hours;
         int min = 0;
@@ -226,13 +248,39 @@ public abstract class BaseActivity extends AppCompatActivity {
             hours = (int) ((diff - (1000 * 60 * 60 * 24 * days)) / (1000 * 60 * 60 * 24));
             min = (int) (diff - (1000 * 60 * 60 * 24 * days) - (1000 * 60 * 60 * hours)) / (1000 * 60);
             hours = (hours < 0 ? -hours : hours);
-            if (min >= store.getInt(checkIntervalOnBatteryServiceLevelChecker)) {
+            if (min >= store.getInt(intervalToCheckInMinutesKeyStore)) {
                 log("interval is now pass " + min + " minutes");
                 store.saveLong(timeStampAlertLastPlayed, curMillis);
                 return true;
             }
         } else {
             log("no timeStampAlertLastPlayed set. Setting now.");
+            store.saveLong(timeStampAlertLastPlayed, curMillis);
+        }
+        return false;
+    }
+
+    public static boolean isTimeIntervalDone(PrefStore store,
+                                             String intervalToCheckInMinutesKeyStore) {
+        Date curDate = new Date();
+        int hours;
+        int min = 0;
+        int days;
+        long curMillis = curDate.getTime();
+        long prevTime = store.getLong(timeStampAlertLastPlayed, -1);
+        if (prevTime != -1) {
+            long diff = curMillis - prevTime;
+            days = (int) (diff / (1000 * 60 * 60 * 24));
+            hours = (int) ((diff - (1000 * 60 * 60 * 24 * days)) / (1000 * 60 * 60 * 24));
+            min = (int) (diff - (1000 * 60 * 60 * 24 * days) - (1000 * 60 * 60 * hours)) / (1000 * 60);
+            hours = (hours < 0 ? -hours : hours);
+            if (min >= store.getInt(intervalToCheckInMinutesKeyStore, 10)) {
+                logStatic("interval is now pass " + min + " minutes");
+                store.saveLong(timeStampAlertLastPlayed, curMillis);
+                return true;
+            }
+        } else {
+            logStatic("no timeStampAlertLastPlayed set. Setting now.");
             store.saveLong(timeStampAlertLastPlayed, curMillis);
         }
         return false;
@@ -270,4 +318,47 @@ public abstract class BaseActivity extends AppCompatActivity {
             }
         });
     }
+
+    public static boolean isTimeInBetweenSleepMode(long startSH, long now, long stopSH) {
+        Calendar startSHCalendar = Calendar.getInstance();
+        startSHCalendar.setTimeInMillis(startSH);
+        Calendar nowCalendar = Calendar.getInstance();
+        nowCalendar.setTimeInMillis(now);
+        Calendar stopSHCalendar = Calendar.getInstance();
+        stopSHCalendar.setTimeInMillis(stopSH);
+
+        int startSHhour = startSHCalendar.get(Calendar.HOUR_OF_DAY);
+        int startSHmin = startSHCalendar.get(Calendar.MINUTE);
+        int timeStart = startSHhour * 60 + startSHmin;  //this
+
+        int nowHour = nowCalendar.get(Calendar.HOUR_OF_DAY);
+        int nowMin = nowCalendar.get(Calendar.MINUTE);
+        int timeNow = nowHour * 60 + nowMin;  //this
+
+        int stopSHhour = stopSHCalendar.get(Calendar.HOUR_OF_DAY);
+        int stopSHmin = stopSHCalendar.get(Calendar.MINUTE);
+        int timeStop = stopSHhour * 60 + stopSHmin;  //this
+
+        if (timeStart <= timeNow && timeNow <= timeStop) {
+            logStatic("Time is in between");
+            return true;
+        } else {
+            logStatic("Time is not betwwen");
+            return false;
+        }
+    }
+
+    public static boolean isServiceRunningInForeground(Context context, Class<?> serviceClass) {
+        ActivityManager manager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (serviceClass.getName().equals(service.service.getClassName())) {
+                if (service.foreground) {
+                    return true;
+                }
+
+            }
+        }
+        return false;
+    }
+
 }

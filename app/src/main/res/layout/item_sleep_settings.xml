@@ -39,7 +39,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="8dp"
                 android:background="@color/transparent"
-                android:text="Sleep mode\n(Alerts are off during these hours)"
+                android:text="Sleep mode - Alerts are off now"
                 android:textColor="@color/blue"
                 android:textStyle="bold"
                 app:layout_constraintBottom_toTopOf="@+id/textView_startTime"

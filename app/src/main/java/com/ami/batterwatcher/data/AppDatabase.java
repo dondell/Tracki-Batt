@@ -65,8 +65,8 @@ public abstract class AppDatabase extends RoomDatabase {
 
                 ChargeDao chargeDao = INSTANCE.chargeDao();
                 chargeDao.deleteAll();
-                chargeDao.insert(new ChargeModel(1, "Charging"));
-                chargeDao.insert(new ChargeModel(2, "Dis-charging"));
+                chargeDao.insert(new ChargeModel(1, "Charging", "Charging"));
+                chargeDao.insert(new ChargeModel(2, "Dis-charging",  "Low batt"));
             });
         }
     };

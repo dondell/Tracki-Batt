@@ -9,6 +9,7 @@ import android.media.AudioManager;
 import android.net.Uri;
 import android.os.BatteryManager;
 import android.os.Build;
+import android.os.Handler;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.Voice;
 import android.view.LayoutInflater;
@@ -36,8 +37,10 @@ import com.ami.batterwatcher.viewmodels.AlertModel;
 import com.ami.batterwatcher.viewmodels.ChargeModel;
 import com.ami.batterwatcher.viewmodels.ChargeWithPercentageModel;
 import com.ami.batterwatcher.viewmodels.PercentageModel;
+import com.google.firebase.crashlytics.FirebaseCrashlytics;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -56,12 +59,15 @@ public class MainActivity extends BaseActivity {
     private BroadcastReceiver mBatInfoReceiver;
     private boolean initTTSSuccessfull = false;
     private TextToSpeech tts;
+    private Voice defaultTTSVoice;
     private int currentBattLevel;
     private BatteryManager myBatteryManager;
     private AudioManager audio;
     int currentMusicVolume;
     int currentRingtoneVolume;
-    private Voice defaultTTSVoice;
+    FirebaseCrashlytics mCrashlytics;
+    int t = 0;
+    Handler handler = new Handler();
 
     @Override
     protected int setLayout() {
@@ -122,6 +128,31 @@ public class MainActivity extends BaseActivity {
         audio = (AudioManager) this.getSystemService(Context.AUDIO_SERVICE);
         currentMusicVolume = audio.getStreamVolume(AudioManager.STREAM_MUSIC);
         currentRingtoneVolume = audio.getStreamVolume(AudioManager.STREAM_RING);
+
+        viewDataBinding.switchService.setChecked(!store.getBoolean(isSwitchOff, true));
+
+        /*mCrashlytics = FirebaseCrashlytics.getInstance();
+
+        // Log the onCreate event, this will also be printed in logcat
+        mCrashlytics.log("onCreate");
+
+        // Add some custom values and identifiers to be included in crash reports
+        mCrashlytics.setCustomKey("MeaningOfLife", 42);
+        mCrashlytics.setCustomKey("LastUIAction", "Test value");
+        mCrashlytics.setUserId("123456789");
+
+        // Report a non-fatal exception, for demonstration purposes
+        mCrashlytics.recordException(new Exception("Non-fatal exception: something went wrong!"));
+
+        try {
+            throw new NullPointerException();
+        } catch (NullPointerException ex) {
+            // [START crashlytics_log_and_report]
+            mCrashlytics.log("NPE caught!");
+            mCrashlytics.recordException(ex);
+            // [END crashlytics_log_and_report]
+        }*/
+
     }
 
     @Override
@@ -161,9 +192,9 @@ public class MainActivity extends BaseActivity {
 
         viewDataBinding.switchService.setOnCheckedChangeListener((compoundButton, b) -> {
             if (b) {
-                startBatteryService();
+                store.setBoolean(isSwitchOff, false);
             } else {
-                stopBatteryService();
+                store.setBoolean(isSwitchOff, true);
             }
         });
 
@@ -198,10 +229,23 @@ public class MainActivity extends BaseActivity {
                                             "com.android.settings.TextToSpeechSettings"))
                             .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
         });
+
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if (BaseActivity.isCharging(mContext)) {
+                    viewDataBinding.textViewChargingStatus.setText("isCharging = true");
+                    store.setBoolean(isCharging, true);
+                } else {
+                    viewDataBinding.textViewChargingStatus.setText("isCharging = false");
+                    store.setBoolean(isCharging, false);
+                }
+                handler.postDelayed(this, 1000);
+            }
+        }, 1000);
     }
 
     private void startBatteryService() {
-        store.setBoolean(isSwitchOff, true);
         //registerReceiver(this.mBatInfoReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
         startService(new Intent(this, BatteryService.class));
         mBatInfoReceiver = new BroadcastReceiver();
@@ -210,7 +254,6 @@ public class MainActivity extends BaseActivity {
     }
 
     private void stopBatteryService() {
-        store.setBoolean(isSwitchOff, false);
         if (mBatInfoReceiver != null) {
             LocalBroadcastManager.getInstance(this).unregisterReceiver(mBatInfoReceiver);
         }
@@ -220,10 +263,6 @@ public class MainActivity extends BaseActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_main, menu);
-        /*MenuItem item = menu.getItem(1);
-        SpannableString s = new SpannableString("My red MenuItem");
-        s.setSpan(new ForegroundColorSpan(Color.RED), 0, s.length(), 0);
-        item.setTitle(s);*/
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -277,6 +316,21 @@ public class MainActivity extends BaseActivity {
                 }
                 viewDataBinding.includeCharging.textViewChargingPercentages.setText(sb1.toString());
                 viewDataBinding.includeDischarging.textViewDisChargingPercentages.setText(sb2.toString());
+
+                Calendar nowCal = Calendar.getInstance();
+                if (!isTimeInBetweenSleepMode(
+                        store.getLong(startTimeLong), nowCal.getTimeInMillis(),
+                        store.getLong(stopTimeLong))) {
+                    viewDataBinding.includeSetting.textViewText1.setText("Sleep mode - Alerts are on now");
+                    viewDataBinding.includeSetting.textViewText1.setTextColor(
+                            mContext.getResources().getColor(R.color.blue)
+                    );
+                } else {
+                    viewDataBinding.includeSetting.textViewText1.setText("Sleep mode - Alerts are off now");
+                    viewDataBinding.includeSetting.textViewText1.setTextColor(
+                            mContext.getResources().getColor(R.color.red)
+                    );
+                }
             }
         });
 
@@ -307,13 +361,13 @@ public class MainActivity extends BaseActivity {
                     log("TTS successfully initialized");
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                         for (Voice tmpVoice : tts.getVoices()) {
-                            log("tts voice " + tmpVoice.getName());
+                            //log("tts voice " + tmpVoice.getName());
                             if (tmpVoice.getName().contains("female")) {
-                                log("found female voice " + tmpVoice.getName());
+                                //log("found female voice " + tmpVoice.getName());
                                 store.saveString(ttsFemale, tmpVoice.getName());
                             }
                             if (tmpVoice.getName().contains("male")) {
-                                log("found male voice " + tmpVoice.getName());
+                                //log("found male voice " + tmpVoice.getName());
                                 store.saveString(ttsMale, tmpVoice.getName());
                             }
                         }
@@ -357,15 +411,14 @@ public class MainActivity extends BaseActivity {
             }
             //Only play the TTS if the current battery level is not the same as previous battery level
             if (storedPreviousBatLevel != -1) {
-                checkRulesOnTheList();
+                //checkRulesOnTheList();
             } else
                 log("Previous battery level " + storedPreviousBatLevel + " is the same as current level " + currentBattLevel);
         }
     }
 
     private void checkRulesOnTheList() {
-
-        if (!store.getBoolean(isSwitchOff, false))
+        if (store.getBoolean(isSwitchOff, false))
             return;
 
         //Check if user check disable during call settings
@@ -389,14 +442,13 @@ public class MainActivity extends BaseActivity {
         boolean ttsWasPlayed = false;
         boolean isCharging = false;
 
-        /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (myBatteryManager.isCharging()) {
-                isCharging = true;
-            }
-        } else if (isCharging(mContext)) {
-            isCharging = true;
-        }*/
         isCharging = store.getBoolean(BaseActivity.isCharging, false);
+        String isEnableRepeatitionKeyStore = isCharging ?
+                enableRepeatedAlertForPercentageForCharging :
+                enableRepeatedAlertForPercentageForDisCharging;
+        String checkIntervalOnBatteryServiceLevelCheckerKeyStore = isCharging ?
+                checkIntervalOnBatteryServiceLevelCheckerForCharging :
+                checkIntervalOnBatteryServiceLevelCheckerForDisCharging;
 
         log("isCharging: " + isCharging);
 
@@ -425,7 +477,7 @@ public class MainActivity extends BaseActivity {
                 return;
             // This will check if the "enable repetition" setting is disabled and battery level = percentage
             if (
-                    (!store.getBoolean(enableRepeatedAlertForPercentage, true)
+                    (!store.getBoolean(isEnableRepeatitionKeyStore, true)
                             && p.percentage >= currentBattLevel
                             && p.percentage <= currentBattLevel
                             //avoid repetition since we don't have interval checker here
@@ -448,9 +500,9 @@ public class MainActivity extends BaseActivity {
                     && p.selected
                     && p.percentage <= currentBattLevel
                     && (prevPercentage != null && currentBattLevel <= prevPercentage.percentage)
-                    && store.getBoolean(enableRepeatedAlertForPercentage, true)
+                    && store.getBoolean(isEnableRepeatitionKeyStore, true)
                     //&& storedPreviousBatLevel != currentBattLevel
-                    && isTimeIntervalDone()
+                    && isTimeIntervalDone(checkIntervalOnBatteryServiceLevelCheckerKeyStore)
             ) {
                 log("Play tts in new battery level");
                 store.setInt(previousBatValueKey, currentBattLevel);
@@ -459,9 +511,9 @@ public class MainActivity extends BaseActivity {
             } else if (!isCharging
                     && p.selected
                     && p.percentage >= currentBattLevel
-                    && store.getBoolean(enableRepeatedAlertForPercentage, true)
+                    && store.getBoolean(isEnableRepeatitionKeyStore, true)
                     //&& storedPreviousBatLevel != currentBattLevel
-                    && isTimeIntervalDone()
+                    && isTimeIntervalDone(checkIntervalOnBatteryServiceLevelCheckerKeyStore)
             ) {
                 log("Play tts in new battery level");
                 store.setInt(previousBatValueKey, currentBattLevel);
@@ -481,6 +533,5 @@ public class MainActivity extends BaseActivity {
             audio.setStreamVolume(AudioManager.STREAM_RING, currentRingtoneVolume, 0);
         }
     }
-
 
 }
