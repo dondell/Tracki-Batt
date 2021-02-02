@@ -1,5 +1,6 @@
 package com.ami.batterwatcher.view;
 
+import android.app.TimePickerDialog;
 import android.content.Context;
 import android.os.Build;
 import android.speech.tts.TextToSpeech;
@@ -58,39 +59,108 @@ public class SettingsActivity extends BaseActivity {
     @Override
     protected void setListeners() {
         viewDataBinding.linearLayoutStartTime.setOnClickListener(view -> {
-            showTimePicker((timePicker, hourOfDay, selectedMinute) -> {
-                viewDataBinding.textViewStartTime.
-                        setText(convertTimePickerTime(hourOfDay, selectedMinute));
-                store.setInt(startTimeHr, hourOfDay);
-                store.setInt(startTimeMn, selectedMinute);
+            /*showTimePicker((timePicker, hourOfDay, selectedMinute) -> {});*/
+            Calendar calStartTime = Calendar.getInstance();
+            calStartTime.set(Calendar.HOUR_OF_DAY, store.getInt(startTimeHr));
+            calStartTime.set(Calendar.MINUTE, store.getInt(startTimeMn));
+            if (store.getInt(startTimeAMPM) < 12) {
+                calStartTime.set(Calendar.AM_PM, Calendar.AM);
+            } else {
+                calStartTime.set(Calendar.AM_PM, Calendar.PM);
+            }
+            TimePickerDialog tpdStart = new TimePickerDialog(
+                    mContext,
+                    R.style.Theme_AppCompat_Light_Dialog,
+                    (TimePickerDialog.OnTimeSetListener) (timePicker, hourOfDay, selectedMinute) -> {
+                        viewDataBinding.textViewStartTime.
+                                setText(convertTimePickerTime(hourOfDay, selectedMinute));
+                        store.setInt(startTimeHr, hourOfDay);
+                        store.setInt(startTimeMn, selectedMinute);
+                        if (hourOfDay < 12) {
+                            store.setInt(startTimeAMPM, Calendar.AM);
+                        } else {
+                            store.setInt(startTimeAMPM, Calendar.PM);
+                        }
 
-                final Calendar calendar = Calendar.getInstance();
-                calendar.set(Calendar.HOUR_OF_DAY, hourOfDay);
-                calendar.set(Calendar.MINUTE, selectedMinute);
-                calendar.set(Calendar.SECOND, 0);
-                calendar.set(Calendar.MILLISECOND, 0);
+                        final Calendar calendar = Calendar.getInstance();
+                        calendar.set(Calendar.HOUR_OF_DAY, hourOfDay);
+                        calendar.set(Calendar.MINUTE, selectedMinute);
+                        calendar.set(Calendar.SECOND, 0);
+                        calendar.set(Calendar.MILLISECOND, 0);
 
-                long millis = calendar.getTimeInMillis();
-                store.saveLong(startTimeLong, millis);
-            });
+                        long millis = calendar.getTimeInMillis();
+                        store.saveLong(startTimeLong, millis);
+                    },
+                    calStartTime.get(Calendar.HOUR_OF_DAY),
+                    calStartTime.get(Calendar.MINUTE),
+                    false
+            );
+            tpdStart.show();
         });
 
         viewDataBinding.linearLayoutEndTime.setOnClickListener(view -> {
-            showTimePicker((timePicker, hourOfDay, selectedMinute) -> {
-                viewDataBinding.textViewEndTime.
-                        setText(convertTimePickerTime(hourOfDay, selectedMinute));
-                store.setInt(stopTimeHr, hourOfDay);
-                store.setInt(stopTimeMn, selectedMinute);
+            /*showTimePicker((timePicker, hourOfDay, selectedMinute) -> {});*/
+            Calendar calStartTime = Calendar.getInstance();
+            calStartTime.set(Calendar.HOUR_OF_DAY, store.getInt(startTimeHr));
+            calStartTime.set(Calendar.MINUTE, store.getInt(startTimeMn));
+            if (store.getInt(startTimeAMPM) < 12) {
+                calStartTime.set(Calendar.AM_PM, Calendar.AM);
+            } else {
+                calStartTime.set(Calendar.AM_PM, Calendar.PM);
+            }
 
-                final Calendar calendar = Calendar.getInstance();
-                calendar.set(Calendar.HOUR_OF_DAY, hourOfDay);
-                calendar.set(Calendar.MINUTE, selectedMinute);
-                calendar.set(Calendar.SECOND, 0);
-                calendar.set(Calendar.MILLISECOND, 0);
+            Calendar calEndTime = Calendar.getInstance();
+            calEndTime.set(Calendar.HOUR_OF_DAY, store.getInt(stopTimeHr));
+            calEndTime.set(Calendar.MINUTE, store.getInt(stopTimeMn));
+            if (store.getInt(stopTimeAMPM) < 12) {
+                calEndTime.set(Calendar.AM_PM, Calendar.AM);
+            } else {
+                calEndTime.set(Calendar.AM_PM, Calendar.PM);
+            }
 
-                long millis = calendar.getTimeInMillis();
-                store.saveLong(stopTimeLong, millis);
-            });
+            TimePickerDialog tpdEnd = new TimePickerDialog(
+                    mContext,
+                    R.style.Theme_AppCompat_Light_Dialog,
+                    (TimePickerDialog.OnTimeSetListener) (timePicker, hourOfDay, selectedMinute) -> {
+
+                        calEndTime.set(Calendar.HOUR_OF_DAY, hourOfDay);
+                        calEndTime.set(Calendar.MINUTE, selectedMinute);
+                        if (hourOfDay < 12) {
+                            calEndTime.set(Calendar.AM_PM, Calendar.AM);
+                        } else {
+                            calEndTime.set(Calendar.AM_PM, Calendar.PM);
+                        }
+
+                        //check if end time is less than start time
+                        /*if (calEndTime.before(calStartTime)) {
+                            showDialogOkButton("End time must not be less than start time.");
+                            return;
+                        }*/
+
+                        viewDataBinding.textViewEndTime.
+                                setText(convertTimePickerTime(hourOfDay, selectedMinute));
+                        store.setInt(stopTimeHr, hourOfDay);
+                        store.setInt(stopTimeMn, selectedMinute);
+                        if (hourOfDay < 12) {
+                            store.setInt(stopTimeAMPM, Calendar.AM);
+                        } else {
+                            store.setInt(stopTimeAMPM, Calendar.PM);
+                        }
+
+                        final Calendar calendar = Calendar.getInstance();
+                        calendar.set(Calendar.HOUR_OF_DAY, hourOfDay);
+                        calendar.set(Calendar.MINUTE, selectedMinute);
+                        calendar.set(Calendar.SECOND, 0);
+                        calendar.set(Calendar.MILLISECOND, 0);
+
+                        long millis = calendar.getTimeInMillis();
+                        store.saveLong(stopTimeLong, millis);
+                    },
+                    calEndTime.get(Calendar.HOUR_OF_DAY),
+                    calEndTime.get(Calendar.MINUTE),
+                    false
+            );
+            tpdEnd.show();
         });
 
         viewDataBinding.checkboxAudioProfile.setOnCheckedChangeListener((compoundButton, b) -> {

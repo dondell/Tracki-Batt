@@ -6,6 +6,7 @@
 
     <TimePicker
         android:id="@+id/timePicker_time"
+        style="@style/Theme.AppCompat.Light.NoActionBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:layout_constraintTop_toTopOf="parent" />

@@ -15,6 +15,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.speech.tts.TextToSpeech;
+import android.speech.tts.UtteranceProgressListener;
 import android.speech.tts.Voice;
 import android.text.TextUtils;
 
@@ -31,9 +32,11 @@ import com.ami.batterwatcher.util.PrefStore;
 import com.ami.batterwatcher.view.MainActivity;
 import com.ami.batterwatcher.viewmodels.ChargeWithPercentageModel;
 import com.ami.batterwatcher.viewmodels.PercentageModel;
+import com.google.gson.Gson;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 
@@ -68,6 +71,7 @@ public class BatteryService extends Service {
     private AudioManager audio;
     private int currentMusicVolume;
     private int currentRingtoneVolume;
+    private int maxMusicVolume, maxRingVolume;
     private List<ChargeWithPercentageModel> chargeWithPercentageModels;
     private ChargeViewModel chargeViewModel;
 
@@ -110,17 +114,20 @@ public class BatteryService extends Service {
             if (storedPreviousBatLevel != -1) {
                 //Only alert if time is not in between sleep mode
                 Calendar nowCal = Calendar.getInstance();
+                boolean isCharging = false;
+                isCharging = BaseActivity.isCharging(getApplicationContext());
+
+                String checkIntervalOnBatteryServiceLevelCheckerKeyStore = isCharging ?
+                        checkIntervalOnBatteryServiceLevelCheckerForCharging :
+                        checkIntervalOnBatteryServiceLevelCheckerForDisCharging;
                 if (!isTimeInBetweenSleepMode(
                         store.getLong(startTimeLong), nowCal.getTimeInMillis(),
-                        store.getLong(stopTimeLong))) {
+                        store.getLong(stopTimeLong))
+                        && isTimeIntervalDone(store, checkIntervalOnBatteryServiceLevelCheckerKeyStore)) {
                     checkRulesOnTheList();
                 }
             } else
                 logStatic("Previous battery level " + storedPreviousBatLevel + " is the same as current level " + currentBattLevel);
-
-            /*if (store.getBoolean(isSwitchOff)) {
-                stopForeground(true);
-            }*/
 
         }
     };
@@ -133,7 +140,11 @@ public class BatteryService extends Service {
         handler.postDelayed(checkBatteryStatusRunnable, CHECK_BATTERY_INTERVAL);
 
         store.setBoolean(isSwitchOff, false);
-        audio = (AudioManager) this.getSystemService(Context.AUDIO_SERVICE);
+        audio = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        currentMusicVolume = audio.getStreamVolume(AudioManager.STREAM_MUSIC);
+        currentRingtoneVolume = audio.getStreamVolume(AudioManager.STREAM_RING);
+        maxMusicVolume = audio.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+        maxRingVolume = audio.getStreamMaxVolume(AudioManager.STREAM_NOTIFICATION);
 
         chargeWithPercentageModels = new ArrayList<>();
         chargeViewModel = new ViewModelProvider.AndroidViewModelFactory(getApplication()).create(ChargeViewModel.class);
@@ -237,6 +248,7 @@ public class BatteryService extends Service {
     }
 
     private void initializeTTS() {
+
         initTTSSuccessfull = false;
         tts = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
             @Override
@@ -283,12 +295,64 @@ public class BatteryService extends Service {
                 }
             }
         });
+
+        tts.setOnUtteranceProgressListener(new UtteranceProgressListener() {
+
+            @Override
+            public void onBeginSynthesis(String utteranceId, int sampleRateInHz, int audioFormat, int channelCount) {
+                super.onBeginSynthesis(utteranceId, sampleRateInHz, audioFormat, channelCount);
+            }
+
+            @Override
+            public void onStart(String s) {
+                int checkCurrentMusicVolume = audio.getStreamVolume(AudioManager.STREAM_MUSIC);
+                int checkCurrentRingtoneVolume = audio.getStreamVolume(AudioManager.STREAM_RING);
+                logStatic("tts while playing currentMusicVolume:" + checkCurrentMusicVolume + " currentRingtoneVolume:" + checkCurrentRingtoneVolume);
+            }
+
+            @Override
+            public void onDone(String s) {
+                //Set volume previous volume level set by user
+                logStatic("onDone tts currentMusicVolume:" + currentMusicVolume + " currentRingtoneVolume:" + currentRingtoneVolume);
+                audio.setStreamVolume(AudioManager.STREAM_MUSIC, currentMusicVolume, AudioManager.FLAG_REMOVE_SOUND_AND_VIBRATE);
+                audio.setStreamVolume(AudioManager.STREAM_RING, currentRingtoneVolume, 0);
+            }
+
+            @Override
+            public void onError(String s) {
+
+            }
+        });
     }
 
     private void checkRulesOnTheList() {
+        BaseActivity.readPowerConsumption(getApplicationContext());
+
         if (store.getBoolean(isSwitchOff, false)) {
             logStatic("Switch is off");
             return;
+        }
+
+        //Check if user enable max volume for Alert
+        if (store.getBoolean(ignoreSystemAudioProfile, false)) {
+            if (checkModifyMaxVolumePermissionNoPrompt(getApplicationContext())) {
+                if (store.getBoolean(playSoundWithMaxVolume)) {
+                    currentMusicVolume = audio.getStreamVolume(AudioManager.STREAM_MUSIC);
+                    currentRingtoneVolume = audio.getStreamVolume(AudioManager.STREAM_RING);
+                    logStatic("check currentMusicVolume:" + currentMusicVolume + " currentRingtoneVolume:" + currentRingtoneVolume);
+
+                    //set to max volume
+                    audio.setRingerMode(AudioManager.RINGER_MODE_NORMAL);
+                    audio.setStreamVolume(AudioManager.STREAM_MUSIC, maxMusicVolume, AudioManager.FLAG_REMOVE_SOUND_AND_VIBRATE);
+                    audio.setStreamVolume(AudioManager.STREAM_RING, maxRingVolume, 0);
+                } else {
+                    currentMusicVolume = audio.getStreamVolume(AudioManager.STREAM_MUSIC);
+                    currentRingtoneVolume = audio.getStreamVolume(AudioManager.STREAM_RING);
+                    audio.setRingerMode(AudioManager.RINGER_MODE_NORMAL);
+                    audio.setStreamVolume(AudioManager.STREAM_MUSIC, currentMusicVolume, AudioManager.FLAG_REMOVE_SOUND_AND_VIBRATE);
+                    audio.setStreamVolume(AudioManager.STREAM_RING, currentRingtoneVolume, 0);
+                }
+            }
         }
 
         //Check if user check disable during call settings
@@ -296,20 +360,6 @@ public class BatteryService extends Service {
                 && isCallActive(getApplicationContext())) {
             logStatic("Alert is off because you are in active call");
             return;
-        }
-
-        //Check if user enable max volume for Alert
-        if (store.getBoolean(ignoreSystemAudioProfile, false)) {
-            if (checkModifyMaxVolumePermissionNoPrompt(this)) {
-                if (store.getBoolean(playSoundWithMaxVolume)) {
-                    int maxMusicVolume = audio.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
-                    int maxRingVolume = audio.getStreamMaxVolume(AudioManager.STREAM_NOTIFICATION);
-                    audio.setRingerMode(AudioManager.RINGER_MODE_NORMAL);
-                    audio.setStreamVolume(AudioManager.STREAM_MUSIC, maxMusicVolume,
-                            AudioManager.FLAG_REMOVE_SOUND_AND_VIBRATE);
-                    audio.setStreamVolume(AudioManager.STREAM_RING, maxRingVolume, 0);
-                }
-            }
         }
 
         boolean ttsWasPlayed = false;
@@ -336,58 +386,38 @@ public class BatteryService extends Service {
         }
 
         ChargeWithPercentageModel cp = chargeWithPercentageModels.get(arrayIndexToGet);
-        for (int j = cp.percentageModels.size() - 1; j >= 0; j--) {
+        int prevPercent = 0, nextPercent = 0;
+        for (int i = 0; i < cp.percentageModels.size(); i++) {
+            logStatic(new Gson().toJson(cp.percentageModels.get(i)));
             PercentageModel prevPercentage = null, nextPercentage = null;
             //get previous percentage
-            if (j > 0) {
-                prevPercentage = cp.percentageModels.get(j - 1);
+            if (i > 0) {
+                prevPercentage = cp.percentageModels.get(i - 1);
+                prevPercent = prevPercentage.percentage;
             }
             //get next to the current percentage
-            if ((j + 1) <= (cp.percentageModels.size() - 1)) {
-                nextPercentage = cp.percentageModels.get(j + 1);
+            if ((i + 1) <= (cp.percentageModels.size() - 1)) {
+                nextPercentage = cp.percentageModels.get(i + 1);
+                nextPercent = cp.percentageModels.get(i + 1).percentage;
             }
-            PercentageModel p = cp.percentageModels.get(j);
+            PercentageModel p = cp.percentageModels.get(i);
             if (ttsWasPlayed)
                 return;
-            // This will check if the "enable repetition" setting is disabled and battery level = percentage
-            /*if (
-                    (!store.getBoolean(isEnableRepeatitionKeyStore, true)
-                            && p.percentage >= currentBattLevel
-                            && p.percentage <= currentBattLevel
-                            && isTimeIntervalDone(store, checkIntervalOnBatteryServiceLevelCheckerKeyStore)
-                    ) ||
-                            (p.percentage >= currentBattLevel
-                                    && p.percentage <= currentBattLevel
-                                    && storedPreviousBatLevel != currentBattLevel
-                            )
-            ) {
-                logStatic("Play tts in with battery level == percentage");
-                store.setInt(previousBatValueKey, (int) currentBattLevel);
-                ttsWasPlayed = true;
-                playTTS(cp.chargeModel.eventString, p.percentage);
-            }*/
-            /*
-            This will check if previous battery level is not equal to the current level
-             */
             if (isCharging
-                    && p.selected
-                    && p.percentage <= currentBattLevel &&
-                    (
-                            (prevPercentage != null && currentBattLevel <= prevPercentage.percentage)
-                                    || (prevPercentage == null && currentBattLevel >= p.percentage)
-                    )
+                    && p.selected &&
+                    (p.percentage <= currentBattLevel//left filter
+                            && ((nextPercentage == null) || nextPercentage.percentage > currentBattLevel))//right filter
                     && store.getBoolean(isEnableRepeatitionKeyStore, true)
-                    && isTimeIntervalDone(store, checkIntervalOnBatteryServiceLevelCheckerKeyStore)
             ) {
                 logStatic("Play tts in new battery level");
                 store.setInt(previousBatValueKey, (int) currentBattLevel);
                 ttsWasPlayed = true;
                 playTTS(cp.chargeModel.eventString, p.percentage);
             } else if (!isCharging
-                    && p.selected
-                    && p.percentage >= currentBattLevel
+                    && p.selected &&
+                    (p.percentage >= currentBattLevel//left filter
+                            && ((prevPercentage == null) || prevPercentage.percentage < currentBattLevel))//right filter
                     && store.getBoolean(isEnableRepeatitionKeyStore, true)
-                    && isTimeIntervalDone(store, checkIntervalOnBatteryServiceLevelCheckerKeyStore)
             ) {
                 logStatic("Play tts in new battery level");
                 store.setInt(previousBatValueKey, (int) currentBattLevel);
@@ -399,31 +429,14 @@ public class BatteryService extends Service {
 
     private void playTTS(String tell, int percentage) {
         logStatic("playTTS: " + tell);
-        //Set volume previous volume level set by user
-        if (checkModifyMaxVolumePermissionNoPrompt(getApplicationContext())
-                && store.getBoolean(ignoreSystemAudioProfile, true)) {
-            audio = (AudioManager) this.getSystemService(Context.AUDIO_SERVICE);
-            currentMusicVolume = audio.getStreamVolume(AudioManager.STREAM_MUSIC);
-            currentRingtoneVolume = audio.getStreamVolume(AudioManager.STREAM_RING);
-            //set to max volume
-            int maxMusicVolume = audio.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
-            int maxRingVolume = audio.getStreamMaxVolume(AudioManager.STREAM_NOTIFICATION);
-            audio.setRingerMode(AudioManager.RINGER_MODE_NORMAL);
-            audio.setStreamVolume(AudioManager.STREAM_MUSIC, maxMusicVolume,
-                    AudioManager.FLAG_REMOVE_SOUND_AND_VIBRATE);
-            audio.setStreamVolume(AudioManager.STREAM_RING, maxRingVolume, 0);
-        }
-
+        HashMap<String, String> map = new HashMap<String, String>();
+        map.put(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, "UniqueID");
         tts.setLanguage(Locale.US);
         if (TextUtils.isEmpty(tell) || tell.equalsIgnoreCase("null"))
-            tts.speak("" + percentage, TextToSpeech.QUEUE_ADD, null);
+            tts.speak("" + percentage, TextToSpeech.QUEUE_ADD, map);
         else {
-            tts.speak(tell + " " + percentage, TextToSpeech.QUEUE_ADD, null);
+            tts.speak(tell + " " + percentage, TextToSpeech.QUEUE_ADD, map);
         }
-        //set to user volume
-        audio.setStreamVolume(AudioManager.STREAM_MUSIC, currentMusicVolume,
-                AudioManager.FLAG_REMOVE_SOUND_AND_VIBRATE);
-        audio.setStreamVolume(AudioManager.STREAM_RING, currentRingtoneVolume, 0);
     }
 
     public boolean isCallActive(Context context) {

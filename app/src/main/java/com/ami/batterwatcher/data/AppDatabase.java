@@ -67,6 +67,56 @@ public abstract class AppDatabase extends RoomDatabase {
                 chargeDao.deleteAll();
                 chargeDao.insert(new ChargeModel(1, "Charging", "Charging"));
                 chargeDao.insert(new ChargeModel(2, "Dis-charging",  "Low batt"));
+
+                PercentageDao percentageDao = INSTANCE.percentageDao();
+                if(percentageDao.findByPercent(3, 1) == null)
+                    percentageDao.insert(new PercentageModel(1, 3, 1, false));
+                if(percentageDao.findByPercent(7, 1) == null)
+                    percentageDao.insert(new PercentageModel(2, 7, 1, false));
+                if(percentageDao.findByPercent(10, 1) == null)
+                    percentageDao.insert(new PercentageModel(3, 10, 1, false));
+                if(percentageDao.findByPercent(20, 1) == null)
+                    percentageDao.insert(new PercentageModel(4, 20, 1, false));
+                if(percentageDao.findByPercent(30, 1) == null)
+                    percentageDao.insert(new PercentageModel(5, 30, 1, false));
+                if(percentageDao.findByPercent(40, 1) == null)
+                    percentageDao.insert(new PercentageModel(6, 40, 1, false));
+                if(percentageDao.findByPercent(50, 1) == null)
+                    percentageDao.insert(new PercentageModel(7, 50, 1, false));
+                if(percentageDao.findByPercent(60, 1) == null)
+                    percentageDao.insert(new PercentageModel(8, 60, 1, false));
+                if(percentageDao.findByPercent(70, 1) == null)
+                    percentageDao.insert(new PercentageModel(9, 70, 1, false));
+                if(percentageDao.findByPercent(80, 1) == null)
+                    percentageDao.insert(new PercentageModel(10, 80, 1, false));
+                if(percentageDao.findByPercent(90, 1) == null)
+                    percentageDao.insert(new PercentageModel(11, 90, 1, false));
+                if(percentageDao.findByPercent(100, 1) == null)
+                    percentageDao.insert(new PercentageModel(12, 100, 1, false));
+                if(percentageDao.findByPercent(3, 2) == null)
+                    percentageDao.insert(new PercentageModel(13, 3, 2, false));
+                if(percentageDao.findByPercent(7, 2) == null)
+                    percentageDao.insert(new PercentageModel(14, 7, 2, false));
+                if(percentageDao.findByPercent(10, 2) == null)
+                    percentageDao.insert(new PercentageModel(15, 10, 2, false));
+                if(percentageDao.findByPercent(20, 2) == null)
+                    percentageDao.insert(new PercentageModel(16, 20, 2, false));
+                if(percentageDao.findByPercent(30, 2) == null)
+                    percentageDao.insert(new PercentageModel(17, 30, 2, false));
+                if(percentageDao.findByPercent(40, 2) == null)
+                    percentageDao.insert(new PercentageModel(18, 40, 2, false));
+                if(percentageDao.findByPercent(50, 2) == null)
+                    percentageDao.insert(new PercentageModel(19, 50, 2, false));
+                if(percentageDao.findByPercent(60, 2) == null)
+                    percentageDao.insert(new PercentageModel(20, 60, 2, false));
+                if(percentageDao.findByPercent(70, 2) == null)
+                    percentageDao.insert(new PercentageModel(21, 70, 2, false));
+                if(percentageDao.findByPercent(80, 2) == null)
+                    percentageDao.insert(new PercentageModel(22, 80, 2, false));
+                if(percentageDao.findByPercent(90, 2) == null)
+                    percentageDao.insert(new PercentageModel(23, 90, 2, false));
+                if(percentageDao.findByPercent(100, 2) == null)
+                    percentageDao.insert(new PercentageModel(24, 100, 2, false));
             });
         }
     };

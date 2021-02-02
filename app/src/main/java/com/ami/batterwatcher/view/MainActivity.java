@@ -9,6 +9,7 @@ import android.media.AudioManager;
 import android.net.Uri;
 import android.os.BatteryManager;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.Handler;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.Voice;
@@ -33,6 +34,8 @@ import com.ami.batterwatcher.data.AlertViewModel;
 import com.ami.batterwatcher.data.ChargeViewModel;
 import com.ami.batterwatcher.databinding.ActivityMainBinding;
 import com.ami.batterwatcher.service.BatteryService;
+import com.ami.batterwatcher.util.BatteryUtil;
+import com.ami.batterwatcher.util.WaveHelper;
 import com.ami.batterwatcher.viewmodels.AlertModel;
 import com.ami.batterwatcher.viewmodels.ChargeModel;
 import com.ami.batterwatcher.viewmodels.ChargeWithPercentageModel;
@@ -41,6 +44,7 @@ import com.google.firebase.crashlytics.FirebaseCrashlytics;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -62,12 +66,14 @@ public class MainActivity extends BaseActivity {
     private Voice defaultTTSVoice;
     private int currentBattLevel;
     private BatteryManager myBatteryManager;
+    private BatteryUtil batteryUtil;
     private AudioManager audio;
     int currentMusicVolume;
     int currentRingtoneVolume;
     FirebaseCrashlytics mCrashlytics;
     int t = 0;
     Handler handler = new Handler();
+    private WaveHelper mWaveHelper;
 
     @Override
     protected int setLayout() {
@@ -124,6 +130,8 @@ public class MainActivity extends BaseActivity {
         recyclerView_list.setItemAnimator(new DefaultItemAnimator());
         showBackButton(false);
 
+        batteryUtil = new BatteryUtil();
+
         recyclerView_list.setAdapter(listAdapter);
         audio = (AudioManager) this.getSystemService(Context.AUDIO_SERVICE);
         currentMusicVolume = audio.getStreamVolume(AudioManager.STREAM_MUSIC);
@@ -131,6 +139,7 @@ public class MainActivity extends BaseActivity {
 
         viewDataBinding.switchService.setChecked(!store.getBoolean(isSwitchOff, true));
 
+        mWaveHelper = new WaveHelper(mContext, viewDataBinding.wave, (float) 0.0f);
         /*mCrashlytics = FirebaseCrashlytics.getInstance();
 
         // Log the onCreate event, this will also be printed in logcat
@@ -159,35 +168,32 @@ public class MainActivity extends BaseActivity {
     protected void setListeners() {
         startBatteryService();
         myBatteryManager = (BatteryManager) mContext.getSystemService(Context.BATTERY_SERVICE);
+        registerReceiver(this.batteryInfo, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
 
-        viewDataBinding.includeSetting.getRoot().setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent settingsIntent = new Intent(MainActivity.this, SettingsActivity.class);
-                startActivity(settingsIntent);
-            }
+        viewDataBinding.imageViewBatteryInfo.setOnClickListener(view -> {
+            Intent batteryInfoIntent = new Intent(MainActivity.this, BatteryInfoActivity.class);
+            startActivity(batteryInfoIntent);
         });
 
-        viewDataBinding.includeCharging.getRoot().setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent addIntent = new Intent(MainActivity.this, AlertDetailsActivity.class);
-                addIntent.putExtra("screen_type", 3);
-                if (chargeModels.size() > 0)
-                    addIntent.putExtra("data", chargeModels.get(0));
-                startActivity(addIntent);
-            }
+        viewDataBinding.includeSetting.getRoot().setOnClickListener(view -> {
+            Intent settingsIntent = new Intent(MainActivity.this, SettingsActivity.class);
+            startActivity(settingsIntent);
         });
 
-        viewDataBinding.includeDischarging.getRoot().setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent addIntent = new Intent(MainActivity.this, AlertDetailsActivity.class);
-                addIntent.putExtra("screen_type", 4);
-                if (chargeModels.size() > 0)
-                    addIntent.putExtra("data", chargeModels.get(1));
-                startActivity(addIntent);
-            }
+        viewDataBinding.includeCharging.getRoot().setOnClickListener(view -> {
+            Intent addIntent = new Intent(MainActivity.this, AlertDetailsActivity.class);
+            addIntent.putExtra("screen_type", 3);
+            if (chargeModels.size() > 0)
+                addIntent.putExtra("data", chargeModels.get(0));
+            startActivity(addIntent);
+        });
+
+        viewDataBinding.includeDischarging.getRoot().setOnClickListener(view -> {
+            Intent addIntent = new Intent(MainActivity.this, AlertDetailsActivity.class);
+            addIntent.putExtra("screen_type", 4);
+            if (chargeModels.size() > 0)
+                addIntent.putExtra("data", chargeModels.get(1));
+            startActivity(addIntent);
         });
 
         viewDataBinding.switchService.setOnCheckedChangeListener((compoundButton, b) -> {
@@ -285,11 +291,13 @@ public class MainActivity extends BaseActivity {
     protected void onDestroy() {
         super.onDestroy();
         stopBatteryService();
+        unregisterReceiver(batteryInfo);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+        mWaveHelper.start();
         initializeTTS();
         viewModel.getAll().observe(this, alertModels -> {
             models.clear();
@@ -345,6 +353,7 @@ public class MainActivity extends BaseActivity {
     @Override
     protected void onPause() {
         super.onPause();
+        mWaveHelper.cancel();
     }
 
     private void initializeTTS() {
@@ -533,5 +542,82 @@ public class MainActivity extends BaseActivity {
             audio.setStreamVolume(AudioManager.STREAM_RING, currentRingtoneVolume, 0);
         }
     }
+
+    private android.content.BroadcastReceiver batteryInfo = new android.content.BroadcastReceiver() {
+        @Override
+        public void onReceive(Context ctxt, Intent intent) {
+            int level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, 0);
+            int scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, 100);
+            int status = intent.getIntExtra(BatteryManager.EXTRA_STATUS, 0);
+            int health = intent.getIntExtra(BatteryManager.EXTRA_HEALTH, 0);
+            int plugged = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, 0);
+            int voltage = intent.getIntExtra(BatteryManager.EXTRA_VOLTAGE, 0);
+            int temperature = intent.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, 0);
+            String technology = intent.getStringExtra(BatteryManager.EXTRA_TECHNOLOGY);
+            boolean isPresent = intent.getBooleanExtra("present", false);
+
+            Bundle bundle = intent.getExtras();
+
+            int current = 0;
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+                current = myBatteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW);
+                viewDataBinding.textViewChargingSpeed.setText(String.format(Locale.US,
+                        "%s speed: %s (%s mA)",
+                        BaseActivity.isCharging(mContext) ? "Charging" : "Discharging",
+                        batteryUtil.getChargingAndDischargingSpeed(current), current));
+            }
+
+            if (Build.VERSION.SDK_INT >= 21) {
+                BatteryManager bm = (BatteryManager) getSystemService(BATTERY_SERVICE);
+                int i = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
+                mWaveHelper.setWaterLevel((float) i / 100);
+                viewDataBinding.textViewPercentBatteryWave.setText(i + " %");
+            } else {
+                IntentFilter iFilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+
+                double batteryPct = level / (double) scale;
+                mWaveHelper.setWaterLevel((float) (batteryPct * 100) / 100);
+                viewDataBinding.textViewPercentBatteryWave.setText((batteryPct * 100) + " %");
+            }
+
+            //check time remaining to full charge
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+                long time = myBatteryManager.computeChargeTimeRemaining();
+                Date d = new Date(time * 1000);
+                viewDataBinding.textViewChargingTimeRemaining.setText("" + d.toString());
+            } else {
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+                    Long chargeCounter = myBatteryManager
+                            .getLongProperty(BatteryManager.BATTERY_PROPERTY_CHARGE_COUNTER);
+                    Long capacity = myBatteryManager
+                            .getLongProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
+
+                    /*if (chargeCounter != null && capacity != null) {
+                        long value = (long) (((float) chargeCounter / (float) capacity) * 100f);*/
+
+                    if (store.getInt(lastPercentageJump, -1) == -1) {
+                        store.setInt(lastPercentageJump, level);
+                    }
+                    if (store.getLong(timeLastPercentageJump, -1) == -1) {
+                        Date curDate = new Date();
+                        store.saveLong(timeLastPercentageJump, curDate.getTime());
+                    } else {
+                        /*if (store.getLong(lastPercentageJump) != level) {
+                            Date curDate = new Date();
+
+                            *//*String finalTimeRemaining =
+                                    getTimeDiffBetweenThisOldTimeAndCurrentTime(
+                                            getDate(store.getLong(timeLastPercentageJump),
+                                                    SIMPLE_DATE_FORMAT), level);*//*
+                            viewDataBinding.textViewChargingTimeRemaining
+                                    .setText("Remaining time: ");
+
+                            store.saveLong(timeLastPercentageJump, curDate.getTime());*/
+                        //}
+                    }
+                }
+            }
+        }
+    };
 
 }

@@ -77,6 +77,9 @@ dependencies {
     // Add the dependencies for any other desired Firebase products
     // https://firebase.google.com/docs/android/setup#available-libraries
 
+    implementation 'com.wdullaer:materialdatetimepicker:4.2.3'
+
+    implementation 'com.gelitenight.waveview:waveview:1.0.0'
 
     testImplementation 'junit:junit:4.+'
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'

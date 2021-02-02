@@ -2,10 +2,12 @@ package com.ami.batterwatcher.base;
 
 import android.app.ActivityManager;
 import android.app.NotificationManager;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.media.AudioManager;
 import android.os.BatteryManager;
 import android.os.Build;
@@ -27,9 +29,11 @@ import com.ami.batterwatcher.BuildConfig;
 import com.ami.batterwatcher.R;
 import com.ami.batterwatcher.util.PrefStore;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 public abstract class BaseActivity extends AppCompatActivity {
     public Context mContext;
@@ -52,14 +56,21 @@ public abstract class BaseActivity extends AppCompatActivity {
     public static final String disableAlertDuringCall = "disableAlertDuringCall";//boolean
     public static final String startTimeHr = "startTimeHr";//int
     public static final String startTimeMn = "startTimeMn";//int
+    public static final String startTimeAMPM = "startTimeAMPM";//int
     public static final String startTimeLong = "startTimeLong";//long
     public static final String stopTimeHr = "stopTimeHr";//int
     public static final String stopTimeMn = "stopTimeMn";//int
+    public static final String stopTimeAMPM = "stopTimeAMPM";//int
     public static final String stopTimeLong = "stopTimeLong";//long
     public static final String ttsVoiceType = "ttsVoiceType"; //int 1=male, 2=female
     public static final String isCharging = "isCharging";//boolean
     public static final String ttsFemale = "ttsFemale";//String
     public static final String ttsMale = "ttsMale";//String
+    public static final String timeLastPercentageJump = "timeLastPercentageJump";//long
+    public static final String timeRemainingToFullCharge = "timeRemainingToFullCharge";//long
+    public static final String lastPercentageJump = "astPercentageJump";//int
+    public static final String SIMPLE_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
+    public static final String wasDoneSettingMaxV = "yyyy-MM-dd HH:mm:ss";
     private static final int REQUEST_CODE_MAX_VOL = 1001;
     private SimpleDateFormat formatter;
 
@@ -359,6 +370,92 @@ public abstract class BaseActivity extends AppCompatActivity {
             }
         }
         return false;
+    }
+
+    public static void readPowerConsumption(Context context) {
+        BatteryManager mBatteryManager = null;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+            mBatteryManager = (BatteryManager) context.getSystemService(Context.BATTERY_SERVICE);
+        }
+        Long energy = null;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+            energy = mBatteryManager.getLongProperty(BatteryManager.BATTERY_PROPERTY_ENERGY_COUNTER);
+        }
+        logStatic("Remaining energy = " + energy + "nWh");
+
+    }
+
+    /**
+     * Return date in specified format.
+     *
+     * @param milliSeconds Date in milliseconds
+     * @param dateFormat   Date format
+     * @return String representing date in specified format
+     */
+    public static String getDate(long milliSeconds, String dateFormat) {
+        // Create a DateFormatter object for displaying date in specified format.
+        SimpleDateFormat formatter = new SimpleDateFormat(dateFormat);
+
+        // Create a calendar object that will convert the date and time value in milliseconds to date.
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(milliSeconds);
+        return formatter.format(calendar.getTime());
+    }
+
+    public long getMilliSecondsDiffOfTwoDates(Date oldDate) {
+        Date dateNow = new Date();
+        return dateNow.getTime() - oldDate.getTime();
+    }
+
+    public String getTimeDiffBetweenThisOldTimeAndCurrentTime(String oldtime, int batlevel) {
+        int day = 0;
+        int hh = 0;
+        int mm = 0;
+        try {
+            SimpleDateFormat dateFormat = new SimpleDateFormat(SIMPLE_DATE_FORMAT);
+            Date oldDate = dateFormat.parse(oldtime);
+            Date cDate = new Date();
+            Long timeDiff = cDate.getTime() - oldDate.getTime();
+            timeDiff = timeDiff * (100 - batlevel); //interpolator till 100% to get time remaining
+            day = (int) TimeUnit.MILLISECONDS.toDays(timeDiff);
+            hh = (int) (TimeUnit.MILLISECONDS.toHours(timeDiff) - TimeUnit.DAYS.toHours(day));
+            mm = (int) (TimeUnit.MILLISECONDS.toMinutes(timeDiff) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(timeDiff)));
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        if (day == 0) {
+            return hh + " hour " + mm + " min";
+        } else if (hh == 0) {
+            return mm + " min";
+        } else {
+            return day + " days " + hh + " hour " + mm + " min";
+        }
+    }
+
+    /**
+     * Open another app.
+     *
+     * @param context     current Context, like Activity, App, or Service
+     * @param packageName the full package name of the app to open
+     * @return true if likely successful, false if unsuccessful
+     *
+     * e.g openApp(this, "com.google.android.maps.mytracks");
+     * https://stackoverflow.com/a/7596063
+     */
+    public static boolean openApp(Context context, String packageName) {
+        PackageManager manager = context.getPackageManager();
+        try {
+            Intent i = manager.getLaunchIntentForPackage(packageName);
+            if (i == null) {
+                return false;
+                //throw new ActivityNotFoundException();
+            }
+            i.addCategory(Intent.CATEGORY_LAUNCHER);
+            context.startActivity(i);
+            return true;
+        } catch (ActivityNotFoundException e) {
+            return false;
+        }
     }
 
 }

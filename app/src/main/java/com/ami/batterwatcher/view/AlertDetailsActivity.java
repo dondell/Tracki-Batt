@@ -135,32 +135,30 @@ public class AlertDetailsActivity extends BaseActivity {
 
     @Override
     protected void setListeners() {
-        viewDataBinding.checkbox100.setOnCheckedChangeListener((compoundButton, b) ->
-                percentageViewModel.insert(new PercentageModel(screen_type == 3 ? 1 : 14, 100, chargeModelId, b)));
-        viewDataBinding.checkbox95.setOnCheckedChangeListener((compoundButton, b) ->
-                percentageViewModel.insert(new PercentageModel(screen_type == 3 ? 2 : 15, 95, chargeModelId, b)));
-        viewDataBinding.checkbox90.setOnCheckedChangeListener((compoundButton, b) ->
-                percentageViewModel.insert(new PercentageModel(screen_type == 3 ? 3 : 16, 90, chargeModelId, b)));
-        viewDataBinding.checkbox80.setOnCheckedChangeListener((compoundButton, b) ->
-                percentageViewModel.insert(new PercentageModel(screen_type == 3 ? 4 : 17, 80, chargeModelId, b)));
-        viewDataBinding.checkbox70.setOnCheckedChangeListener((compoundButton, b) ->
-                percentageViewModel.insert(new PercentageModel(screen_type == 3 ? 5 : 18, 70, chargeModelId, b)));
-        viewDataBinding.checkbox60.setOnCheckedChangeListener((compoundButton, b) ->
-                percentageViewModel.insert(new PercentageModel(screen_type == 3 ? 6 : 19, 60, chargeModelId, b)));
-        viewDataBinding.checkbox50.setOnCheckedChangeListener((compoundButton, b) ->
-                percentageViewModel.insert(new PercentageModel(screen_type == 3 ? 7 : 20, 50, chargeModelId, b)));
-        viewDataBinding.checkbox40.setOnCheckedChangeListener((compoundButton, b) ->
-                percentageViewModel.insert(new PercentageModel(screen_type == 3 ? 8 : 21, 40, chargeModelId, b)));
-        viewDataBinding.checkbox30.setOnCheckedChangeListener((compoundButton, b) ->
-                percentageViewModel.insert(new PercentageModel(screen_type == 3 ? 9 : 22, 30, chargeModelId, b)));
-        viewDataBinding.checkbox20.setOnCheckedChangeListener((compoundButton, b) ->
-                percentageViewModel.insert(new PercentageModel(screen_type == 3 ? 10 : 23, 20, chargeModelId, b)));
-        viewDataBinding.checkbox10.setOnCheckedChangeListener((compoundButton, b) ->
-                percentageViewModel.insert(new PercentageModel(screen_type == 3 ? 11 : 24, 10, chargeModelId, b)));
-        viewDataBinding.checkbox7.setOnCheckedChangeListener((compoundButton, b) ->
-                percentageViewModel.insert(new PercentageModel(screen_type == 3 ? 12 : 25, 7, chargeModelId, b)));
         viewDataBinding.checkbox3.setOnCheckedChangeListener((compoundButton, b) ->
-                percentageViewModel.insert(new PercentageModel(screen_type == 3 ? 13 : 26, 3, chargeModelId, b)));
+                percentageViewModel.insert(new PercentageModel(screen_type == 3 ? 1 : 13, 3, chargeModelId, b)));
+        viewDataBinding.checkbox7.setOnCheckedChangeListener((compoundButton, b) ->
+                percentageViewModel.insert(new PercentageModel(screen_type == 3 ? 2 : 14, 7, chargeModelId, b)));
+        viewDataBinding.checkbox10.setOnCheckedChangeListener((compoundButton, b) ->
+                percentageViewModel.insert(new PercentageModel(screen_type == 3 ? 3 : 15, 10, chargeModelId, b)));
+        viewDataBinding.checkbox20.setOnCheckedChangeListener((compoundButton, b) ->
+                percentageViewModel.insert(new PercentageModel(screen_type == 3 ? 4 : 16, 20, chargeModelId, b)));
+        viewDataBinding.checkbox30.setOnCheckedChangeListener((compoundButton, b) ->
+                percentageViewModel.insert(new PercentageModel(screen_type == 3 ? 5 : 17, 30, chargeModelId, b)));
+        viewDataBinding.checkbox40.setOnCheckedChangeListener((compoundButton, b) ->
+                percentageViewModel.insert(new PercentageModel(screen_type == 3 ? 6 : 18, 40, chargeModelId, b)));
+        viewDataBinding.checkbox50.setOnCheckedChangeListener((compoundButton, b) ->
+                percentageViewModel.insert(new PercentageModel(screen_type == 3 ? 7 : 19, 50, chargeModelId, b)));
+        viewDataBinding.checkbox60.setOnCheckedChangeListener((compoundButton, b) ->
+                percentageViewModel.insert(new PercentageModel(screen_type == 3 ? 8 : 20, 60, chargeModelId, b)));
+        viewDataBinding.checkbox70.setOnCheckedChangeListener((compoundButton, b) ->
+                percentageViewModel.insert(new PercentageModel(screen_type == 3 ? 9 : 21, 70, chargeModelId, b)));
+        viewDataBinding.checkbox80.setOnCheckedChangeListener((compoundButton, b) ->
+                percentageViewModel.insert(new PercentageModel(screen_type == 3 ? 10 : 22, 80, chargeModelId, b)));
+        viewDataBinding.checkbox90.setOnCheckedChangeListener((compoundButton, b) ->
+                percentageViewModel.insert(new PercentageModel(screen_type == 3 ? 11 : 23, 90, chargeModelId, b)));
+        viewDataBinding.checkbox100.setOnCheckedChangeListener((compoundButton, b) ->
+                percentageViewModel.insert(new PercentageModel(screen_type == 3 ? 12 : 24, 100, chargeModelId, b)));
 
         viewDataBinding.checkboxEnableNotificationSoundRepetition
                 .setOnCheckedChangeListener((compoundButton, b) -> {

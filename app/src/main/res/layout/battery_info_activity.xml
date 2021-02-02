@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+        <import type="android.view.View" />
+
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@mipmap/bg"
+        tools:context=".view.MainActivity">
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/default_gradient_bg" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/_8sdp"
+            android:orientation="vertical"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <com.ami.batterwatcher.ui.CustomTvLight
+                android:id="@+id/textView_technology"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="@dimen/_18sdp"
+                tools:text="Technology:" />
+
+
+            <com.ami.batterwatcher.ui.CustomTvLight
+                android:id="@+id/textView_voltage"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="@dimen/_18sdp"
+                tools:text="Voltage:" />
+
+            <com.ami.batterwatcher.ui.CustomTvLight
+                android:id="@+id/textView_temperature"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="@dimen/_18sdp"
+                tools:text="Temperature:" />
+
+
+            <com.ami.batterwatcher.ui.CustomTvLight
+                android:id="@+id/textView_currentAvg"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="@dimen/_18sdp"
+                tools:text="Average Current:" />
+
+
+            <com.ami.batterwatcher.ui.CustomTvLight
+                android:id="@+id/textView_current"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="@dimen/_18sdp"
+                tools:text="Current:" />
+
+            <com.ami.batterwatcher.ui.CustomTvLight
+                android:id="@+id/textView_status"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="@dimen/_18sdp"
+                tools:text="Discharging/Charging: -199 mA" />
+
+            <com.ami.batterwatcher.ui.CustomTvLight
+                android:id="@+id/textView_health"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="@dimen/_18sdp"
+                tools:text="Health:" />
+
+            <com.ami.batterwatcher.ui.CustomTvLight
+                android:id="@+id/textView_charging"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="@dimen/_18sdp"
+                tools:text="Charging:" />
+
+            <com.ami.batterwatcher.ui.CustomTvLight
+                android:id="@+id/textView_batteryPercent"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="@dimen/_18sdp"
+                tools:text="%:" />
+
+            <com.ami.batterwatcher.ui.CustomTvLight
+                android:id="@+id/textView_chargingTimeRemaining"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="@dimen/_18sdp"
+                tools:text="Time remaining:" />
+
+            <Button
+                android:id="@+id/button_appList"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Go App list" />
+
+        </LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</layout>

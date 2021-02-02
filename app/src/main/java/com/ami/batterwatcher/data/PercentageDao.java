@@ -26,8 +26,8 @@ public interface PercentageDao {
     @Query("SELECT * FROM percentagemodel WHERE percentageId IN (:userIds)")
     List<PercentageModel> loadAllByIds(int[] userIds);
 
-    @Query("SELECT * FROM percentagemodel WHERE percentage LIKE :first LIKE :last LIMIT 1")
-    PercentageModel findByName(String first, String last);
+    @Query("SELECT * FROM percentagemodel WHERE percentage LIKE :percent AND chargeModelId = :cModelId LIMIT 1")
+    PercentageModel findByPercent(int percent, int cModelId);
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insert(PercentageModel... models);

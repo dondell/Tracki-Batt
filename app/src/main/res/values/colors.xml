@@ -164,4 +164,6 @@
     <color name="gray_variant">#6E706E</color>
     <color name="dark_gray">#6E706E</color>
     <color name="warm_grey">#6E706E</color>
+    <color name="battery_front_wave">#4D1FD51F</color>
+    <color name="battery_behind_wave">#4D1E911E</color>
 </resources>
