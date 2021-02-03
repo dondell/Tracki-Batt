@@ -39,6 +39,7 @@
                     app:layout_constraintTop_toTopOf="parent" />
 
                 <com.gelitenight.waveview.library.WaveView
+                    android:visibility="gone"
                     android:id="@+id/wave"
                     android:layout_width="@dimen/_30sdp"
                     android:layout_height="@dimen/_30sdp"
@@ -188,7 +189,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:gravity="center_horizontal"
-                    android:text="Charging speed:"
+                    android:text="-- : --"
                     android:textColor="@color/white"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"

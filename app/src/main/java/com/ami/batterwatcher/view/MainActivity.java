@@ -5,12 +5,13 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.BatteryManager;
 import android.os.Build;
-import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.Voice;
 import android.view.LayoutInflater;
@@ -18,6 +19,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.ViewModelProvider;
@@ -35,7 +37,6 @@ import com.ami.batterwatcher.data.ChargeViewModel;
 import com.ami.batterwatcher.databinding.ActivityMainBinding;
 import com.ami.batterwatcher.service.BatteryService;
 import com.ami.batterwatcher.util.BatteryUtil;
-import com.ami.batterwatcher.util.WaveHelper;
 import com.ami.batterwatcher.viewmodels.AlertModel;
 import com.ami.batterwatcher.viewmodels.ChargeModel;
 import com.ami.batterwatcher.viewmodels.ChargeWithPercentageModel;
@@ -44,7 +45,6 @@ import com.google.firebase.crashlytics.FirebaseCrashlytics;
 
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -65,7 +65,6 @@ public class MainActivity extends BaseActivity {
     private TextToSpeech tts;
     private Voice defaultTTSVoice;
     private int currentBattLevel;
-    private BatteryManager myBatteryManager;
     private BatteryUtil batteryUtil;
     private AudioManager audio;
     int currentMusicVolume;
@@ -73,7 +72,9 @@ public class MainActivity extends BaseActivity {
     FirebaseCrashlytics mCrashlytics;
     int t = 0;
     Handler handler = new Handler();
-    private WaveHelper mWaveHelper;
+    //private WaveHelper mWaveHelper;
+    private BatteryService batteryService;
+    private boolean mBounded;
 
     @Override
     protected int setLayout() {
@@ -139,7 +140,7 @@ public class MainActivity extends BaseActivity {
 
         viewDataBinding.switchService.setChecked(!store.getBoolean(isSwitchOff, true));
 
-        mWaveHelper = new WaveHelper(mContext, viewDataBinding.wave, (float) 0.0f);
+        //mWaveHelper = new WaveHelper(mContext, viewDataBinding.wave, (float) 0.0f);
         /*mCrashlytics = FirebaseCrashlytics.getInstance();
 
         // Log the onCreate event, this will also be printed in logcat
@@ -166,10 +167,6 @@ public class MainActivity extends BaseActivity {
 
     @Override
     protected void setListeners() {
-        startBatteryService();
-        myBatteryManager = (BatteryManager) mContext.getSystemService(Context.BATTERY_SERVICE);
-        registerReceiver(this.batteryInfo, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
-
         viewDataBinding.imageViewBatteryInfo.setOnClickListener(view -> {
             Intent batteryInfoIntent = new Intent(MainActivity.this, BatteryInfoActivity.class);
             startActivity(batteryInfoIntent);
@@ -226,14 +223,18 @@ public class MainActivity extends BaseActivity {
 
         viewDataBinding.includeAudiosetting.getRoot().setOnClickListener(view -> {
             //Text-to-speech output
-            startActivity(Build.VERSION.SDK_INT >= 14 ?
-                    new Intent().setAction("com.android.settings.TTS_SETTINGS")
-                            .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK) :
-                    new Intent().addCategory(Intent.CATEGORY_LAUNCHER)
-                            .setComponent(
-                                    new ComponentName("com.android.settings",
-                                            "com.android.settings.TextToSpeechSettings"))
-                            .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+            startActivity(new Intent().setAction("com.android.settings.TTS_SETTINGS")
+                    .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+        });
+
+        viewDataBinding.includeAudiosetting.imageViewRefresh.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (null != batteryService) {
+                    batteryService.initializeTTS();
+                    showDialogOkButton("Reinitialized TTS successfully!");
+                }
+            }
         });
 
         handler.postDelayed(new Runnable() {
@@ -252,7 +253,6 @@ public class MainActivity extends BaseActivity {
     }
 
     private void startBatteryService() {
-        //registerReceiver(this.mBatInfoReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
         startService(new Intent(this, BatteryService.class));
         mBatInfoReceiver = new BroadcastReceiver();
         final IntentFilter intentFilter = new IntentFilter("YourAction");
@@ -291,14 +291,35 @@ public class MainActivity extends BaseActivity {
     protected void onDestroy() {
         super.onDestroy();
         stopBatteryService();
-        unregisterReceiver(batteryInfo);
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        Intent mIntent = new Intent(this, BatteryService.class);
+        bindService(mIntent, mConnection, BIND_AUTO_CREATE);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (mBounded) {
+            unbindService(mConnection);
+            mBounded = false;
+        }
+        stopBatteryService();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        mWaveHelper.start();
+        setBatteryInfo();
+        startBatteryService();
+        //mWaveHelper.start();
         initializeTTS();
+        if (batteryService != null) {
+            batteryService.initializeTTS();
+        }
         viewModel.getAll().observe(this, alertModels -> {
             models.clear();
             models.addAll(alertModels);
@@ -353,7 +374,7 @@ public class MainActivity extends BaseActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        mWaveHelper.cancel();
+        //mWaveHelper.cancel();
     }
 
     private void initializeTTS() {
@@ -408,127 +429,28 @@ public class MainActivity extends BaseActivity {
     private class BroadcastReceiver extends android.content.BroadcastReceiver {
         @Override
         public void onReceive(Context arg0, Intent intent) {
-            currentBattLevel = intent.getIntExtra("batteryLevel", -1);
-            int scale = intent.getIntExtra("scale", -1);
-            int status = intent.getIntExtra("status", -1);
-            //Get stored battery value and compare it on the current value
-            int storedPreviousBatLevel = store.getInt(previousBatValueKey, -1);
-            log("rawLevel:" + currentBattLevel + " scale:" + scale + " status:" + status + " storedPreviousBatLevel:" + storedPreviousBatLevel);
-            //If no stored battery value, then save the current battery level
-            if (storedPreviousBatLevel == -1) {
-                store.setInt(previousBatValueKey, currentBattLevel);
+            if (intent.getAction().equalsIgnoreCase("YourAction")) {
+                currentBattLevel = intent.getIntExtra("batteryLevel", -1);
+                setBatteryInfo();
             }
-            //Only play the TTS if the current battery level is not the same as previous battery level
-            if (storedPreviousBatLevel != -1) {
-                //checkRulesOnTheList();
-            } else
-                log("Previous battery level " + storedPreviousBatLevel + " is the same as current level " + currentBattLevel);
         }
     }
 
-    private void checkRulesOnTheList() {
-        if (store.getBoolean(isSwitchOff, false))
-            return;
+    private void setBatteryInfo() {
+        viewDataBinding.textViewChargingSpeed.setText(String.format(Locale.US,
+                "%s speed: %s (%s mA)",
+                BaseActivity.isCharging(mContext) ? "Charging" : "Discharging",
+                batteryUtil.getChargingAndDischargingSpeed(store.getInt(bat_current)),
+                store.getInt(bat_current)));
 
-        //Check if user check disable during call settings
-        if (store.getBoolean(disableAlertDuringCall, true) && isCallActive(mContext))
-            return;
-
-        //Check if user enable max volume for Alert
-        if (store.getBoolean(ignoreSystemAudioProfile, false)) {
-            if (checkModifyMaxVolumePermissionNoPrompt()) {
-                if (store.getBoolean(playSoundWithMaxVolume)) {
-                    int maxMusicVolume = audio.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
-                    int maxRingVolume = audio.getStreamMaxVolume(AudioManager.STREAM_NOTIFICATION);
-                    audio.setRingerMode(AudioManager.RINGER_MODE_NORMAL);
-                    audio.setStreamVolume(AudioManager.STREAM_MUSIC, maxMusicVolume,
-                            AudioManager.FLAG_REMOVE_SOUND_AND_VIBRATE);
-                    audio.setStreamVolume(AudioManager.STREAM_RING, maxRingVolume, 0);
-                }
-            }
-        }
-
-        boolean ttsWasPlayed = false;
-        boolean isCharging = false;
-
-        isCharging = store.getBoolean(BaseActivity.isCharging, false);
-        String isEnableRepeatitionKeyStore = isCharging ?
-                enableRepeatedAlertForPercentageForCharging :
-                enableRepeatedAlertForPercentageForDisCharging;
-        String checkIntervalOnBatteryServiceLevelCheckerKeyStore = isCharging ?
-                checkIntervalOnBatteryServiceLevelCheckerForCharging :
-                checkIntervalOnBatteryServiceLevelCheckerForDisCharging;
-
-        log("isCharging: " + isCharging);
-
-        if (chargeWithPercentageModels.size() == 0)
-            return;
-
+        //Get stored battery value and compare it on the current value
         int storedPreviousBatLevel = store.getInt(previousBatValueKey, -1);
-        int arrayIndexToGet = 0;
-        if (!isCharging) {
-            arrayIndexToGet = 1;
-        }
-
-        ChargeWithPercentageModel cp = chargeWithPercentageModels.get(arrayIndexToGet);
-        for (int j = cp.percentageModels.size() - 1; j >= 0; j--) {
-            PercentageModel prevPercentage = null, nextPercentage = null;
-            //get previous percentage
-            if (j > 0) {
-                prevPercentage = cp.percentageModels.get(j - 1);
-            }
-            //get next to the current percentage
-            if ((j + 1) <= (cp.percentageModels.size() - 1)) {
-                nextPercentage = cp.percentageModels.get(j + 1);
-            }
-            PercentageModel p = cp.percentageModels.get(j);
-            if (ttsWasPlayed)
-                return;
-            // This will check if the "enable repetition" setting is disabled and battery level = percentage
-            if (
-                    (!store.getBoolean(isEnableRepeatitionKeyStore, true)
-                            && p.percentage >= currentBattLevel
-                            && p.percentage <= currentBattLevel
-                            //avoid repetition since we don't have interval checker here
-                            && storedPreviousBatLevel != currentBattLevel
-                    ) ||
-                            (p.percentage >= currentBattLevel
-                                    && p.percentage <= currentBattLevel
-                                    && storedPreviousBatLevel != currentBattLevel
-                            )
-            ) {
-                log("Play tts in with battery level == percentage");
-                store.setInt(previousBatValueKey, currentBattLevel);
-                ttsWasPlayed = true;
-                playTTS(cp.chargeModel.eventString, p.percentage);
-            }
-            /*
-            This will check if previous battery level is not equal to the current level
-             */
-            if (isCharging
-                    && p.selected
-                    && p.percentage <= currentBattLevel
-                    && (prevPercentage != null && currentBattLevel <= prevPercentage.percentage)
-                    && store.getBoolean(isEnableRepeatitionKeyStore, true)
-                    //&& storedPreviousBatLevel != currentBattLevel
-                    && isTimeIntervalDone(checkIntervalOnBatteryServiceLevelCheckerKeyStore)
-            ) {
-                log("Play tts in new battery level");
-                store.setInt(previousBatValueKey, currentBattLevel);
-                ttsWasPlayed = true;
-                playTTS(cp.chargeModel.eventString, p.percentage);
-            } else if (!isCharging
-                    && p.selected
-                    && p.percentage >= currentBattLevel
-                    && store.getBoolean(isEnableRepeatitionKeyStore, true)
-                    //&& storedPreviousBatLevel != currentBattLevel
-                    && isTimeIntervalDone(checkIntervalOnBatteryServiceLevelCheckerKeyStore)
-            ) {
-                log("Play tts in new battery level");
-                store.setInt(previousBatValueKey, currentBattLevel);
-                ttsWasPlayed = true;
-                playTTS(cp.chargeModel.eventString, p.percentage);
-            }
+        log("rawLevel:" + currentBattLevel +
+                " scale:" + store.getInt(bat_scale) + " status:" + store.getInt(bat_status) +
+                " storedPreviousBatLevel:" + storedPreviousBatLevel);
+        //If no stored battery value, then save the current battery level
+        if (storedPreviousBatLevel == -1) {
+            store.setInt(previousBatValueKey, currentBattLevel);
         }
     }
 
@@ -543,81 +465,37 @@ public class MainActivity extends BaseActivity {
         }
     }
 
-    private android.content.BroadcastReceiver batteryInfo = new android.content.BroadcastReceiver() {
-        @Override
-        public void onReceive(Context ctxt, Intent intent) {
-            int level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, 0);
-            int scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, 100);
-            int status = intent.getIntExtra(BatteryManager.EXTRA_STATUS, 0);
-            int health = intent.getIntExtra(BatteryManager.EXTRA_HEALTH, 0);
-            int plugged = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, 0);
-            int voltage = intent.getIntExtra(BatteryManager.EXTRA_VOLTAGE, 0);
-            int temperature = intent.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, 0);
-            String technology = intent.getStringExtra(BatteryManager.EXTRA_TECHNOLOGY);
-            boolean isPresent = intent.getBooleanExtra("present", false);
-
-            Bundle bundle = intent.getExtras();
-
-            int current = 0;
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-                current = myBatteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW);
-                viewDataBinding.textViewChargingSpeed.setText(String.format(Locale.US,
-                        "%s speed: %s (%s mA)",
-                        BaseActivity.isCharging(mContext) ? "Charging" : "Discharging",
-                        batteryUtil.getChargingAndDischargingSpeed(current), current));
-            }
-
-            if (Build.VERSION.SDK_INT >= 21) {
-                BatteryManager bm = (BatteryManager) getSystemService(BATTERY_SERVICE);
-                int i = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
-                mWaveHelper.setWaterLevel((float) i / 100);
-                viewDataBinding.textViewPercentBatteryWave.setText(i + " %");
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_TTS_DATA_CHECK_CODE) {
+            // Success! File has already been installed
+            if (resultCode == TextToSpeech.Engine.CHECK_VOICE_DATA_PASS) {
+                //mTts = new TextToSpeech(mContext, null);
+                showDialogOkButton("Successfully configured TTS");
             } else {
-                IntentFilter iFilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-
-                double batteryPct = level / (double) scale;
-                mWaveHelper.setWaterLevel((float) (batteryPct * 100) / 100);
-                viewDataBinding.textViewPercentBatteryWave.setText((batteryPct * 100) + " %");
-            }
-
-            //check time remaining to full charge
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
-                long time = myBatteryManager.computeChargeTimeRemaining();
-                Date d = new Date(time * 1000);
-                viewDataBinding.textViewChargingTimeRemaining.setText("" + d.toString());
-            } else {
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-                    Long chargeCounter = myBatteryManager
-                            .getLongProperty(BatteryManager.BATTERY_PROPERTY_CHARGE_COUNTER);
-                    Long capacity = myBatteryManager
-                            .getLongProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
-
-                    /*if (chargeCounter != null && capacity != null) {
-                        long value = (long) (((float) chargeCounter / (float) capacity) * 100f);*/
-
-                    if (store.getInt(lastPercentageJump, -1) == -1) {
-                        store.setInt(lastPercentageJump, level);
-                    }
-                    if (store.getLong(timeLastPercentageJump, -1) == -1) {
-                        Date curDate = new Date();
-                        store.saveLong(timeLastPercentageJump, curDate.getTime());
-                    } else {
-                        /*if (store.getLong(lastPercentageJump) != level) {
-                            Date curDate = new Date();
-
-                            *//*String finalTimeRemaining =
-                                    getTimeDiffBetweenThisOldTimeAndCurrentTime(
-                                            getDate(store.getLong(timeLastPercentageJump),
-                                                    SIMPLE_DATE_FORMAT), level);*//*
-                            viewDataBinding.textViewChargingTimeRemaining
-                                    .setText("Remaining time: ");
-
-                            store.saveLong(timeLastPercentageJump, curDate.getTime());*/
-                        //}
-                    }
-                }
+                // fail, attempt to install tts
+                Intent installTts = new Intent();
+                installTts.setAction(TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA);
+                startActivity(installTts);
             }
         }
-    };
+    }
 
+    ServiceConnection mConnection = new ServiceConnection() {
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            //showDialogOkButton("Service is disconnected");
+            mBounded = false;
+            batteryService = null;
+        }
+
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            //showDialogOkButton("Service is connected");
+            mBounded = true;
+            BatteryService.LocalBinder mLocalBinder = (BatteryService.LocalBinder) service;
+            batteryService = mLocalBinder.getServerInstance();
+        }
+    };
 }

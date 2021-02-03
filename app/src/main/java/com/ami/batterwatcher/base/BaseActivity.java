@@ -71,7 +71,33 @@ public abstract class BaseActivity extends AppCompatActivity {
     public static final String lastPercentageJump = "astPercentageJump";//int
     public static final String SIMPLE_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
     public static final String wasDoneSettingMaxV = "yyyy-MM-dd HH:mm:ss";
+    public static final String announceOnVerySlowCharging = "announceOnVerySlowCharging"; //boolean
+    public static final String announceOnVerySlowDisharging = "announceOnVerySlowDisharging"; //boolean
+    public static final String announceOnSlowCharging = "announceOnSlowCharging"; //boolean
+    public static final String announceOnSlowDisharging = "announceOnSlowDisharging"; //boolean
+    public static final String announceOnMediumCharging = "announceOnMediumCharging"; //boolean
+    public static final String announceOnMediumDisharging = "announceOnMediumDisharging"; //boolean
+    public static final String announceOnFastCharging = "announceOnFastCharging"; //boolean
+    public static final String announceOnFastDisharging = "announceOnFastDisharging"; //boolean
+    public static final String announceOnVertFastCharging = "announceOnVertFastCharging"; //boolean
+    public static final String announceOnVertFastDisharging = "announceOnVertFastDisharging"; //boolean
+    public static final String announceOnSuperFastCharging = "announceOnSuperFastCharging"; //boolean
+    public static final String announceOnSuperFastDisharging = "announceOnSuperFastDisharging"; //boolean
+    //Battery keys
+    public static final String bat_current = "bat_current"; //int
+    public static final String bat_current_avg = "bat_current_avg"; //int
+    public static final String bat_isPresent = "bat_isPresent"; //boolean
+    public static final String bat_level = "bat_level"; //int
+    public static final String bat_scale = "bat_scale"; //int
+    public static final String bat_technology = "bat_technology"; //String
+    public static final String bat_voltage = "bat_voltage"; //int
+    public static final String bat_temperature = "bat_temperature"; //int
+    public static final String bat_health = "bat_health"; //int
+    public static final String bat_status = "bat_status"; //int
+    public static final String bat_plugged = "bat_plugged"; //int
+
     private static final int REQUEST_CODE_MAX_VOL = 1001;
+    public static final int REQUEST_TTS_DATA_CHECK_CODE = 1002;
     private SimpleDateFormat formatter;
 
     @Override

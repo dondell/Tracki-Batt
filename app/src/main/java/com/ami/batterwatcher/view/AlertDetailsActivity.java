@@ -81,15 +81,31 @@ public class AlertDetailsActivity extends BaseActivity {
             setActivityTitle("Edit Alert");
         } else if (screen_type == 3) {
             setActivityTitle("Edit Charging");
+            viewDataBinding.textViewAnnounce.setText("On charging announcement");
             viewDataBinding.textViewMode.setText("Charging");
             chargeModelId = 1;
             percentageViewModel.getAllChargingItems().observe(this, this::setCheckBoxes);
         } else if (screen_type == 4) {
             setActivityTitle("Edit Discharging");
+            viewDataBinding.textViewAnnounce.setText("On discharging announcement");
             viewDataBinding.textViewMode.setText("Discharging");
             chargeModelId = 2;
             percentageViewModel.getAllDischargingItems().observe(this, this::setCheckBoxes);
         }
+
+        viewDataBinding.checkboxAnnounceVerySlow.setChecked(screen_type == 3 ?
+                store.getBoolean(announceOnVerySlowCharging) : store.getBoolean(announceOnVerySlowDisharging));
+        viewDataBinding.checkboxAnnounceSlow.setChecked(screen_type == 3 ?
+                store.getBoolean(announceOnSlowCharging) : store.getBoolean(announceOnSlowDisharging));
+        viewDataBinding.checkboxAnnounceMedium.setChecked(screen_type == 3 ?
+                store.getBoolean(announceOnMediumCharging) : store.getBoolean(announceOnMediumDisharging));
+        viewDataBinding.checkboxAnnounceFast.setChecked(screen_type == 3 ?
+                store.getBoolean(announceOnFastCharging) : store.getBoolean(announceOnFastDisharging));
+        viewDataBinding.checkboxAnnounceVeryFast.setChecked(screen_type == 3 ?
+                store.getBoolean(announceOnVertFastCharging) : store.getBoolean(announceOnVertFastDisharging));
+        viewDataBinding.checkboxAnnounceSuperFast.setChecked(screen_type == 3 ?
+                store.getBoolean(announceOnSuperFastCharging) : store.getBoolean(announceOnSuperFastDisharging));
+
         viewDataBinding.editTextInterval.setText(
                 String.format(Locale.US, "%d",
                         store.getInt(screen_type == 3 ?
@@ -159,6 +175,31 @@ public class AlertDetailsActivity extends BaseActivity {
                 percentageViewModel.insert(new PercentageModel(screen_type == 3 ? 11 : 23, 90, chargeModelId, b)));
         viewDataBinding.checkbox100.setOnCheckedChangeListener((compoundButton, b) ->
                 percentageViewModel.insert(new PercentageModel(screen_type == 3 ? 12 : 24, 100, chargeModelId, b)));
+
+        viewDataBinding.checkboxAnnounceVerySlow.setOnCheckedChangeListener(((compoundButton, b) -> {
+            store.setBoolean(screen_type == 3 ?
+                    announceOnVerySlowCharging : announceOnVerySlowDisharging, b);
+        }));
+        viewDataBinding.checkboxAnnounceSlow.setOnCheckedChangeListener(((compoundButton, b) -> {
+            store.setBoolean(screen_type == 3 ?
+                    announceOnSlowCharging : announceOnSlowDisharging, b);
+        }));
+        viewDataBinding.checkboxAnnounceMedium.setOnCheckedChangeListener(((compoundButton, b) -> {
+            store.setBoolean(screen_type == 3 ?
+                    announceOnMediumCharging : announceOnMediumDisharging, b);
+        }));
+        viewDataBinding.checkboxAnnounceFast.setOnCheckedChangeListener(((compoundButton, b) -> {
+            store.setBoolean(screen_type == 3 ?
+                    announceOnFastCharging : announceOnFastDisharging, b);
+        }));
+        viewDataBinding.checkboxAnnounceVeryFast.setOnCheckedChangeListener(((compoundButton, b) -> {
+            store.setBoolean(screen_type == 3 ?
+                    announceOnVertFastCharging : announceOnVertFastDisharging, b);
+        }));
+        viewDataBinding.checkboxAnnounceSuperFast.setOnCheckedChangeListener(((compoundButton, b) -> {
+            store.setBoolean(screen_type == 3 ?
+                    announceOnSuperFastCharging : announceOnSuperFastDisharging, b);
+        }));
 
         viewDataBinding.checkboxEnableNotificationSoundRepetition
                 .setOnCheckedChangeListener((compoundButton, b) -> {

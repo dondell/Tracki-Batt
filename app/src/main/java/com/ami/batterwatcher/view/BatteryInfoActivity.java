@@ -1,19 +1,23 @@
 package com.ami.batterwatcher.view;
 
-import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.os.BatteryManager;
-import android.os.Bundle;
+import android.os.Handler;
+import android.os.IBinder;
 import android.view.LayoutInflater;
 import android.view.View;
 
 import androidx.databinding.DataBindingUtil;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.ami.batterwatcher.R;
 import com.ami.batterwatcher.base.BaseActivity;
 import com.ami.batterwatcher.databinding.BatteryInfoActivityBinding;
+import com.ami.batterwatcher.service.BatteryService;
 import com.ami.batterwatcher.util.BatteryUtil;
 
 import java.util.Date;
@@ -24,6 +28,12 @@ public class BatteryInfoActivity extends BaseActivity {
     private BatteryInfoActivityBinding viewDataBinding;
     private BatteryManager mBatteryManager;
     private BatteryUtil batteryUtil;
+    private BroadcastReceiver2 mBatInfoReceiver;
+    private BatteryService batteryService;
+    private boolean mBounded;
+    private Handler handler = new Handler();
+    private Runnable runnable;
+
 
     @Override
     protected int setLayout() {
@@ -47,7 +57,6 @@ public class BatteryInfoActivity extends BaseActivity {
     @Override
     protected void setListeners() {
         batteryUtil = new BatteryUtil();
-        this.registerReceiver(this.batteryInfo, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
         mBatteryManager = (BatteryManager) mContext.getSystemService(Context.BATTERY_SERVICE);
 
         viewDataBinding.buttonAppList.setOnClickListener(new View.OnClickListener() {
@@ -57,14 +66,52 @@ public class BatteryInfoActivity extends BaseActivity {
                 startActivity(batteryInfoIntent);
             }
         });
+
+        handler.postDelayed(runnable = new Runnable() {
+            @Override
+            public void run() {
+                setInfo();
+                handler.postDelayed(runnable, 1000);
+            }
+        }, 0);
     }
 
+    private void startBatteryService() {
+        mBatInfoReceiver = new BroadcastReceiver2();
+        final IntentFilter intentFilter = new IntentFilter("YourAction");
+        registerReceiver(mBatInfoReceiver, intentFilter);
+    }
+
+    private void stopBatteryService() {
+        if (mBatInfoReceiver != null) {
+            unregisterReceiver(mBatInfoReceiver);
+        }
+        mBatInfoReceiver = null;
+    }
 
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        unregisterReceiver(batteryInfo);
+        stopBatteryService();
+        handler.removeCallbacks(null);
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        startBatteryService();
+        Intent mIntent = new Intent(this, BatteryService.class);
+        bindService(mIntent, mConnection, BIND_AUTO_CREATE);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (mBounded) {
+            unbindService(mConnection);
+            mBounded = false;
+        }
     }
 
     @Override
@@ -72,54 +119,61 @@ public class BatteryInfoActivity extends BaseActivity {
 
     }
 
-    private BroadcastReceiver batteryInfo = new BroadcastReceiver() {
+    private class BroadcastReceiver2 extends android.content.BroadcastReceiver {
         @Override
-        public void onReceive(Context ctxt, Intent intent) {
-            int level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, 0);
-            int scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, 100);
-            int status = intent.getIntExtra(BatteryManager.EXTRA_STATUS, 0);
-            int health = intent.getIntExtra(BatteryManager.EXTRA_HEALTH, 0);
-            int plugged = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, 0);
-            int voltage = intent.getIntExtra(BatteryManager.EXTRA_VOLTAGE, 0);
-            int temperature = intent.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, 0);
-            String technology = intent.getStringExtra(BatteryManager.EXTRA_TECHNOLOGY);
-            boolean isPresent = intent.getBooleanExtra("present", false);
-
-            Bundle bundle = intent.getExtras();
-            String str = bundle.toString();
-            log("Battery Info " + str);
-
-            if (isPresent) {
-                int percent = (level * 100) / scale;
-                viewDataBinding.textViewTechnology.setText("Technology: " + technology);
-                viewDataBinding.textViewVoltage.setText("Voltage: " + (Double.valueOf(voltage) / 1000.0) + " V");
-                viewDataBinding.textViewTemperature.setText("Temperature: " + (Double.valueOf(temperature) / 10.0) + " C");
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-                    int averageCurrent = mBatteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_AVERAGE);
-                    viewDataBinding.textViewCurrentAvg.setText("Average Current: " + averageCurrent + " mA");
-
-                    int current = mBatteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW);
-                    viewDataBinding.textViewCurrent.setText("Current: " + current + " mA");
-
-                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-                        viewDataBinding.textViewStatus.setText(String.format(Locale.US,
-                                "%s speed: %s (%s mA)",
-                                BaseActivity.isCharging(mContext) ? "Charging" : "Discharging",
-                                batteryUtil.getChargingAndDischargingSpeed(current), current));
-                    }
-                }
-                viewDataBinding.textViewHealth.setText("Health: " + batteryUtil.getHealthString(health));
-                viewDataBinding.textViewCharging.setText("Charging: " + batteryUtil.getStatusString(status) + "(" + batteryUtil.getPlugTypeString(plugged) + ")");
-                viewDataBinding.textViewBatteryPercent.setText("Level " + percent + "%");
-            } else {
-                viewDataBinding.textViewBatteryPercent.setText("Battery not present!!!");
+        public void onReceive(Context arg0, Intent intent) {
+            logStatic("xxx BatteryInfoActivity onReceive " + intent.getAction());
+            if (intent.getAction().equalsIgnoreCase("YourAction")) {
+                setInfo();
             }
+        }
+    }
 
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
-                long time = mBatteryManager.computeChargeTimeRemaining();
-                Date d = new Date(time * 1000);
-                viewDataBinding.textViewChargingTimeRemaining.setText("" + d.toString());
+    private void setInfo() {
+        int percent = (store.getInt(bat_level) * 100) / store.getInt(bat_scale);
+        viewDataBinding.textViewTechnology.setText("Technology: " + store.getString(bat_technology));
+        viewDataBinding.textViewVoltage.setText("Voltage: " + (Double.valueOf(store.getInt(bat_voltage)) / 1000.0) + " V");
+        viewDataBinding.textViewTemperature.setText("Temperature: " + (Double.valueOf(store.getInt(bat_temperature)) / 10.0) + " C");
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+            viewDataBinding.textViewCurrentAvg.setText("Average Current: " + store.getInt(bat_current_avg) + " mA");
+
+            viewDataBinding.textViewCurrent.setText("Current: " + store.getInt(bat_current) + " mA");
+
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+                viewDataBinding.textViewStatus.setText(String.format(Locale.US,
+                        "%s speed: %s (%s mA)",
+                        BaseActivity.isCharging(mContext) ? "Charging" : "Discharging",
+                        batteryUtil.getChargingAndDischargingSpeed(store.getInt(bat_current)), store.getInt(bat_current)));
             }
+        }
+        viewDataBinding.textViewHealth.setText("Health: " +
+                batteryUtil.getHealthString(store.getInt(bat_health)));
+        viewDataBinding.textViewCharging.setText("Charging: " +
+                batteryUtil.getStatusString(store.getInt(bat_status)) +
+                "(" + batteryUtil.getPlugTypeString(store.getInt(bat_plugged)) + ")");
+        viewDataBinding.textViewBatteryPercent.setText("Level " + percent + "%");
+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+            long time = mBatteryManager.computeChargeTimeRemaining();
+            Date d = new Date(time * 1000);
+            viewDataBinding.textViewChargingTimeRemaining.setText("" + d.toString());
+        }
+    }
+
+    ServiceConnection mConnection = new ServiceConnection() {
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            //showDialogOkButton("Service is disconnected");
+            mBounded = false;
+            batteryService = null;
+        }
+
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            //showDialogOkButton("Service is connected");
+            mBounded = true;
+            BatteryService.LocalBinder mLocalBinder = (BatteryService.LocalBinder) service;
+            batteryService = mLocalBinder.getServerInstance();
         }
     };
 

@@ -388,10 +388,10 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="@dimen/_4sdp"
+                            android:layout_marginLeft="@dimen/_4sdp"
                             android:background="@drawable/button_selector"
                             android:text="File Explorer"
-                            android:textColor="@color/white"
-                            android:layout_marginLeft="@dimen/_4sdp" />
+                            android:textColor="@color/white" />
 
                     </LinearLayout>
 
@@ -458,6 +458,79 @@
                     </LinearLayout>
                 </RadioGroup>
 
+                <TextView
+                    android:id="@+id/textView_announce"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="8dp"
+                    android:layout_marginTop="@dimen/_4sdp"
+                    android:text="On charging announcement"
+                    android:textColor="@color/white"
+                    android:textStyle="bold"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/radioGroup_2" />
+
+                <LinearLayout
+                    android:id="@+id/linearLayout_annouce"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/_15sdp"
+                    android:layout_marginLeft="@dimen/_15sdp"
+                    android:layout_marginTop="@dimen/_10sdp"
+                    android:layout_marginEnd="@dimen/_15sdp"
+                    android:orientation="vertical"
+                    android:layout_marginRight="@dimen/_15sdp"
+                    app:layout_constraintTop_toBottomOf="@id/textView_announce">
+
+                    <CheckBox
+                        android:id="@+id/checkbox_announceVerySlow"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:buttonTint="?attr/image_tint_color"
+                        android:text="Very slow"
+                        android:textColor="@color/white" />
+
+                    <CheckBox
+                        android:id="@+id/checkbox_announceSlow"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:buttonTint="?attr/image_tint_color"
+                        android:text="Slow"
+                        android:textColor="@color/white" />
+
+                    <CheckBox
+                        android:id="@+id/checkbox_announceMedium"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:buttonTint="?attr/image_tint_color"
+                        android:text="Medium"
+                        android:textColor="@color/white" />
+
+                    <CheckBox
+                        android:id="@+id/checkbox_announceFast"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:buttonTint="?attr/image_tint_color"
+                        android:text="Fast"
+                        android:textColor="@color/white" />
+
+                    <CheckBox
+                        android:id="@+id/checkbox_announceVeryFast"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:buttonTint="?attr/image_tint_color"
+                        android:text="Very fast"
+                        android:textColor="@color/white" />
+
+                    <CheckBox
+                        android:id="@+id/checkbox_announceSuperFast"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:buttonTint="?attr/image_tint_color"
+                        android:text="Super fast"
+                        android:textColor="@color/white" />
+                </LinearLayout>
+
                 <Button
                     android:id="@+id/button_save"
                     android:layout_width="wrap_content"
@@ -469,7 +542,7 @@
                     android:textColor="@color/white"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/radioGroup_2" />
+                    app:layout_constraintTop_toBottomOf="@+id/linearLayout_annouce" />
 
             </androidx.constraintlayout.widget.ConstraintLayout>
         </ScrollView>
