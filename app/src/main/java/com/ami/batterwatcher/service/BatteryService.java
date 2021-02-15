@@ -16,6 +16,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.UtteranceProgressListener;
 import android.speech.tts.Voice;
@@ -24,6 +25,7 @@ import android.text.TextUtils;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
+import androidx.lifecycle.LiveData;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
@@ -31,17 +33,26 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import com.ami.batterwatcher.R;
 import com.ami.batterwatcher.base.BaseActivity;
 import com.ami.batterwatcher.data.ChargeViewModel;
+import com.ami.batterwatcher.data.usage.ChargingSampleViewModel;
+import com.ami.batterwatcher.data.usage.DischargingSampleViewModel;
+import com.ami.batterwatcher.data.usage.UsageViewModel;
 import com.ami.batterwatcher.util.BatteryUtil;
 import com.ami.batterwatcher.util.PrefStore;
+import com.ami.batterwatcher.util.fgchecker.AppChecker;
 import com.ami.batterwatcher.view.MainActivity;
 import com.ami.batterwatcher.viewmodels.ChargeWithPercentageModel;
+import com.ami.batterwatcher.viewmodels.ChargingSampleModel;
+import com.ami.batterwatcher.viewmodels.DischargingSampleModel;
 import com.ami.batterwatcher.viewmodels.PercentageModel;
+import com.ami.batterwatcher.viewmodels.UsageModel;
 import com.google.gson.Gson;
 
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 import static com.ami.batterwatcher.base.BaseActivity.announceOnFastCharging;
 import static com.ami.batterwatcher.base.BaseActivity.announceOnFastDisharging;
@@ -55,6 +66,7 @@ import static com.ami.batterwatcher.base.BaseActivity.announceOnVertFastCharging
 import static com.ami.batterwatcher.base.BaseActivity.announceOnVertFastDisharging;
 import static com.ami.batterwatcher.base.BaseActivity.announceOnVerySlowCharging;
 import static com.ami.batterwatcher.base.BaseActivity.announceOnVerySlowDisharging;
+import static com.ami.batterwatcher.base.BaseActivity.bat_capacity;
 import static com.ami.batterwatcher.base.BaseActivity.bat_current;
 import static com.ami.batterwatcher.base.BaseActivity.bat_current_avg;
 import static com.ami.batterwatcher.base.BaseActivity.bat_health;
@@ -66,19 +78,27 @@ import static com.ami.batterwatcher.base.BaseActivity.bat_status;
 import static com.ami.batterwatcher.base.BaseActivity.bat_technology;
 import static com.ami.batterwatcher.base.BaseActivity.bat_temperature;
 import static com.ami.batterwatcher.base.BaseActivity.bat_voltage;
+import static com.ami.batterwatcher.base.BaseActivity.chargingSampleId;
 import static com.ami.batterwatcher.base.BaseActivity.checkIntervalOnBatteryServiceLevelCheckerForCharging;
 import static com.ami.batterwatcher.base.BaseActivity.checkIntervalOnBatteryServiceLevelCheckerForDisCharging;
 import static com.ami.batterwatcher.base.BaseActivity.checkModifyMaxVolumePermissionNoPrompt;
+import static com.ami.batterwatcher.base.BaseActivity.disChargingSampleId;
 import static com.ami.batterwatcher.base.BaseActivity.disableAlertDuringCall;
 import static com.ami.batterwatcher.base.BaseActivity.enableRepeatedAlertForPercentageForCharging;
 import static com.ami.batterwatcher.base.BaseActivity.enableRepeatedAlertForPercentageForDisCharging;
 import static com.ami.batterwatcher.base.BaseActivity.ignoreSystemAudioProfile;
+import static com.ami.batterwatcher.base.BaseActivity.includePercentAtTheEndOfAnnouncementCharging;
+import static com.ami.batterwatcher.base.BaseActivity.includePercentAtTheEndOfAnnouncementDisCharging;
 import static com.ami.batterwatcher.base.BaseActivity.isSwitchOff;
 import static com.ami.batterwatcher.base.BaseActivity.isTimeInBetweenSleepMode;
 import static com.ami.batterwatcher.base.BaseActivity.isTimeIntervalDone;
 import static com.ami.batterwatcher.base.BaseActivity.logStatic;
 import static com.ami.batterwatcher.base.BaseActivity.playSoundWithMaxVolume;
 import static com.ami.batterwatcher.base.BaseActivity.previousBatValueKey;
+import static com.ami.batterwatcher.base.BaseActivity.remainingTimeForBatteryToDrainOrCharge;
+import static com.ami.batterwatcher.base.BaseActivity.remainingTimeForBatteryToDrainOrChargeDy;
+import static com.ami.batterwatcher.base.BaseActivity.remainingTimeForBatteryToDrainOrChargeHr;
+import static com.ami.batterwatcher.base.BaseActivity.remainingTimeForBatteryToDrainOrChargeMn;
 import static com.ami.batterwatcher.base.BaseActivity.startTimeLong;
 import static com.ami.batterwatcher.base.BaseActivity.stopTimeLong;
 
@@ -99,15 +119,36 @@ public class BatteryService extends Service {
     private int currentRingtoneVolume;
     private int maxMusicVolume, maxRingVolume;
     private List<ChargeWithPercentageModel> chargeWithPercentageModels;
-    private ChargeViewModel chargeViewModel;
     private IBinder mBinder = new LocalBinder();
     private BatteryManager myBatteryManager;
     private BatteryUtil batteryUtil;
+    private AppChecker appChecker;
+    private String packageDetected = "";
+    private String lastPackageDetected = "";
+    private LiveData<UsageModel> usageModel;
+    private int currentBeforeAppOnForeground;
 
+    //View Models
+    private ChargeViewModel chargeViewModel;
+    private UsageViewModel usageViewModel;
+    private ChargingSampleViewModel chargingSampleViewModel;
+    private DischargingSampleViewModel dischargingSampleViewModel;
+
+    /**
+     * Lists to store the tracked data for calculating charging and discharging time.
+     */
+    //private ArrayList<Long> batteryDischargingTimes, batteryChargingTimes;
+    private LiveData<List<ChargingSampleModel>> chargeSampleList;
+    private LiveData<List<DischargingSampleModel>> dischargeSampleList;
+    /**
+     * A broadcast receiver for tracking the level changes and the battery usage.
+     */
     private BroadcastReceiver batInfoReceiver = new BroadcastReceiver() {
+        int oldDischargeLevel = 101, oldChargeLevel = 0;
+        long oldDischargeTime = 0, oldChargeTime = 0;
+
         @Override
         public void onReceive(Context context, Intent intent) {
-            int rawlevel = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
             int level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, 0);
             int scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, 100);
             int status = intent.getIntExtra(BatteryManager.EXTRA_STATUS, 0);
@@ -125,6 +166,14 @@ public class BatteryService extends Service {
                     averageCurrent = myBatteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_AVERAGE);
                     store.setInt(bat_current, current);
                     store.setInt(bat_current_avg, averageCurrent);
+                    int chargeCounter = myBatteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CHARGE_COUNTER);
+                    int capacity = myBatteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
+
+                    if (chargeCounter == Integer.MIN_VALUE || capacity == Integer.MIN_VALUE) {
+                    } else {
+                        //store.setInt(bat_capacity, (chargeCounter / capacity) * 100);
+                    }
+
                 }
                 store.setBoolean(bat_isPresent, isPresent);
                 store.setInt(bat_level, level);
@@ -144,12 +193,99 @@ public class BatteryService extends Service {
             intentBroadcast.putExtras(bundle);
             LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intentBroadcast);
 
-            if (rawlevel >= 0 && scale > 0) {
-                currentBattLevel = (rawlevel * 100.0) / scale;
+            if (level >= 0 && scale > 0) {
+                currentBattLevel = (level * 100.0) / scale;
             }
+
+            boolean charging = BaseActivity.isCharging(getApplicationContext());
+            if ((!charging) && (level <= 100)) {
+
+                if (level < oldDischargeLevel) {
+
+                    long time = System.currentTimeMillis();
+                    if (oldDischargeTime != 0) {
+                        long diffTime = time - oldDischargeTime;
+                        saveSamples(false, diffTime);
+                        //batteryDischargingTimes.add(diffTime);
+                        publishDischargingText(level);
+                    } else {
+                        onCalculatingDischargingTime();
+                    }
+                    oldDischargeTime = time;
+                    oldDischargeLevel = level;
+                } else if (null != dischargeSampleList.getValue() && dischargeSampleList.getValue().size() > 0) {
+                    publishDischargingText(level);
+                }
+
+                //batteryChargingTimes.clear();
+                oldChargeLevel = 0;
+                oldChargeTime = 0;
+
+            }
+
+            if (charging) {
+
+                if (oldChargeLevel < level) {
+
+                    long time = System.currentTimeMillis();
+                    if (oldChargeTime != 0) {
+                        long diffTime = time - oldChargeTime;
+                        saveSamples(true, diffTime);
+                        //batteryChargingTimes.add(diffTime);
+                        publishChargingText(level);
+                    } else {
+                        onCalculatingChargingTime();
+                    }
+                    oldChargeTime = time;
+                    oldChargeLevel = level;
+
+                } else if (null != chargeSampleList.getValue() && chargeSampleList.getValue().size() > 0) {
+                    publishChargingText(level);
+                }
+
+                if (level == 100) {
+                    onFullBattery();
+                }
+
+                //batteryDischargingTimes.clear();
+                oldDischargeLevel = 100;
+                oldDischargeTime = 0;
+
+            }
+
             logStatic("xxx " + currentBattLevel);
         }
     };
+
+    private void saveSamples(boolean charging, long diffTime) {
+        //get the current id sample of discharging
+        int sampleIndex = store.getInt(charging ? chargingSampleId : disChargingSampleId, -1);
+
+        //starts with id 1 in database
+        if (sampleIndex == -1)
+            sampleIndex = 1;
+        //only maximum of 10 samples required.
+        if (sampleIndex > 10)
+            sampleIndex = 1;
+
+        if (!charging) {
+            dischargingSampleViewModel
+                    .insert(new DischargingSampleModel(
+                            sampleIndex, diffTime
+                    ));
+        } else {
+            chargingSampleViewModel
+                    .insert(new ChargingSampleModel(
+                            sampleIndex, diffTime
+                    ));
+        }
+        logStatic("New sample found for " +
+                (charging ? "charging" : "discharging") + " at level " +
+                store.getInt(bat_level) + " id " + sampleIndex);
+
+        //increment the sample id
+        store.setInt(charging ? chargingSampleId : disChargingSampleId, 1 + 1);
+    }
 
     private Runnable checkBatteryStatusRunnable = new Runnable() {
         @Override
@@ -193,6 +329,8 @@ public class BatteryService extends Service {
         myBatteryManager = (BatteryManager) getSystemService(Context.BATTERY_SERVICE);
         batteryUtil = new BatteryUtil();
         store = new PrefStore(this);
+        //batteryDischargingTimes = new ArrayList<>();
+        //batteryChargingTimes = new ArrayList<>();
         registerReceiver(batInfoReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
         initializeTTS();
 
@@ -208,6 +346,9 @@ public class BatteryService extends Service {
 
         chargeWithPercentageModels = new ArrayList<>();
         chargeViewModel = new ViewModelProvider.AndroidViewModelFactory(getApplication()).create(ChargeViewModel.class);
+        usageViewModel = new ViewModelProvider.AndroidViewModelFactory(getApplication()).create(UsageViewModel.class);
+        chargingSampleViewModel = new ViewModelProvider.AndroidViewModelFactory(getApplication()).create(ChargingSampleViewModel.class);
+        dischargingSampleViewModel = new ViewModelProvider.AndroidViewModelFactory(getApplication()).create(DischargingSampleViewModel.class);
         Observer<List<ChargeWithPercentageModel>> obsEntries = new Observer<List<ChargeWithPercentageModel>>() {
             @Override
             public void onChanged(@Nullable List<ChargeWithPercentageModel> entries) {
@@ -238,6 +379,14 @@ public class BatteryService extends Service {
             }
         };
         chargeViewModel.getAllChargeWithPercentageSets().observeForever(obsEntries);
+
+        //Load the samples from database for charging/discharging
+        chargeSampleList = chargingSampleViewModel.getAll();
+        chargeSampleList.observeForever(chargeSamplesObserver);
+        dischargeSampleList = dischargingSampleViewModel.getAll();
+        dischargeSampleList.observeForever(dischargeSampleListObserver);
+
+        startForegroundChecker();
     }
 
     @Override
@@ -245,6 +394,10 @@ public class BatteryService extends Service {
         logStatic("BatteryService is now destroyed");
         unregisterReceiver(batInfoReceiver);
         handler.removeCallbacks(checkBatteryStatusRunnable);
+
+        stopForegroundChecker();
+        if (null != appUsageObserver)
+            usageModel.removeObserver(appUsageObserver);
     }
 
     @Override
@@ -344,8 +497,12 @@ public class BatteryService extends Service {
             public void onDone(String s) {
                 //Set volume previous volume level set by user
                 logStatic("onDone tts currentMusicVolume:" + currentMusicVolume + " currentRingtoneVolume:" + currentRingtoneVolume);
-                audio.setStreamVolume(AudioManager.STREAM_MUSIC, currentMusicVolume, AudioManager.FLAG_REMOVE_SOUND_AND_VIBRATE);
-                audio.setStreamVolume(AudioManager.STREAM_RING, currentRingtoneVolume, 0);
+                if (checkModifyMaxVolumePermissionNoPrompt(getApplicationContext())) {
+                    if (store.getBoolean(playSoundWithMaxVolume)) {
+                        audio.setStreamVolume(AudioManager.STREAM_MUSIC, currentMusicVolume, 0);
+                        audio.setStreamVolume(AudioManager.STREAM_RING, currentRingtoneVolume, 0);
+                    }
+                }
             }
 
             @Override
@@ -462,53 +619,60 @@ public class BatteryService extends Service {
         HashMap<String, String> map = new HashMap<String, String>();
         map.put(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, "UniqueID");
         String includeSpeedString = "";
+        boolean isCharging = BaseActivity.isCharging(getApplicationContext());
         if (null != myBatteryManager && android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
             int current = 0;
             current = myBatteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW);
             String speedString = batteryUtil.getChargingAndDischargingSpeed(current);
-            boolean isCharging = BaseActivity.isCharging(getApplicationContext());
             if ((isCharging && store.getBoolean(announceOnVerySlowCharging))
                     || (!isCharging && store.getBoolean(announceOnVerySlowDisharging))) {
                 if (speedString.equalsIgnoreCase("Very slow")) {
-                    includeSpeedString = " Very slow";
+                    includeSpeedString = "Very slow ";
                 }
             }
             if ((isCharging && store.getBoolean(announceOnSlowCharging))
                     || (!isCharging && store.getBoolean(announceOnSlowDisharging))) {
                 if (speedString.equalsIgnoreCase("Slow")) {
-                    includeSpeedString = " Slow";
+                    includeSpeedString = "Slow ";
                 }
             }
             if ((isCharging && store.getBoolean(announceOnMediumCharging))
                     || (!isCharging && store.getBoolean(announceOnMediumDisharging))) {
                 if (speedString.equalsIgnoreCase("Medium")) {
-                    includeSpeedString = " Medium";
+                    includeSpeedString = "Medium ";
                 }
             }
             if ((isCharging && store.getBoolean(announceOnFastCharging))
                     || (!isCharging && store.getBoolean(announceOnFastDisharging))) {
                 if (speedString.equalsIgnoreCase("Fast")) {
-                    includeSpeedString = " Fast";
+                    includeSpeedString = " Fast ";
                 }
             }
             if ((isCharging && store.getBoolean(announceOnVertFastCharging))
                     || (!isCharging && store.getBoolean(announceOnVertFastDisharging))) {
                 if (speedString.equalsIgnoreCase("Very fast")) {
-                    includeSpeedString = " Very fast";
+                    includeSpeedString = "Very fast ";
                 }
             }
             if ((isCharging && store.getBoolean(announceOnSuperFastCharging))
                     || (!isCharging && store.getBoolean(announceOnSuperFastDisharging))) {
                 if (speedString.equalsIgnoreCase("Super fast")) {
-                    includeSpeedString = " Super fast";
+                    includeSpeedString = "Super fast ";
                 }
             }
         }
 
+        String includePercentageAtTheEndStr = "";
+        if (isCharging && store.getBoolean(includePercentAtTheEndOfAnnouncementCharging))
+            includePercentageAtTheEndStr = " Percent";
+        else if (!isCharging && store.getBoolean(includePercentAtTheEndOfAnnouncementDisCharging))
+            includePercentageAtTheEndStr = " Percent";
+
         if (TextUtils.isEmpty(tell) || tell.equalsIgnoreCase("null"))
-            tts.speak("" + percentage + includeSpeedString, TextToSpeech.QUEUE_ADD, map);
+            tts.speak("" + includeSpeedString + " " + percentage, TextToSpeech.QUEUE_ADD, map);
         else {
-            tts.speak(tell + " " + percentage + includeSpeedString, TextToSpeech.QUEUE_ADD, map);
+            tts.speak(tell + " " + includeSpeedString + " " +
+                    percentage + includePercentageAtTheEndStr, TextToSpeech.QUEUE_ADD, map);
         }
     }
 
@@ -516,5 +680,207 @@ public class BatteryService extends Service {
         AudioManager manager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
         return manager.getMode() == AudioManager.MODE_IN_CALL;
     }
+
+    /**
+     * Method called when the charging time is calculated.
+     * The {@param hours} and {@param mins} remaining for full charge.
+     */
+    private void onChargingTimePublish(int hours, int mins) {
+        store.saveString(remainingTimeForBatteryToDrainOrCharge,
+                String.format(Locale.US, "Charging time: %sh %sm", hours, mins));
+        store.setInt(remainingTimeForBatteryToDrainOrChargeHr, hours);
+        store.setInt(remainingTimeForBatteryToDrainOrChargeMn, mins);
+    }
+
+    /**
+     * Method called when the charging time is being calculated.
+     * Any status text indicating that "charging time is being calculated" can be used here.
+     */
+    private void onCalculatingChargingTime() {
+        store.saveString(remainingTimeForBatteryToDrainOrCharge, "Computing charging time...");
+    }
+
+    /**
+     * Method called when the charging time is calculated.
+     * The {@param days} , {@param hours} and {@param mins} remaining for the battery to drain.
+     */
+    private void onDischargeTimePublish(int days, int hours, int mins) {
+        store.saveString(remainingTimeForBatteryToDrainOrCharge,
+                String.format(Locale.US, "Discharging time: %sd %sh %sm", days, hours, mins));
+        store.setInt(remainingTimeForBatteryToDrainOrChargeDy, days);
+        store.setInt(remainingTimeForBatteryToDrainOrChargeHr, hours);
+        store.setInt(remainingTimeForBatteryToDrainOrChargeMn, mins);
+    }
+
+    /**
+     * Method called when the discharging time is being calculated.
+     * Any status text indicating that "discharging time is being calculated" can be used here.
+     */
+    private void onCalculatingDischargingTime() {
+        store.saveString(remainingTimeForBatteryToDrainOrCharge, "Computing drain time...");
+    }
+
+    /**
+     * Method called when the battery is fully charged.
+     * Called only when the device is connected to charger and battery becomes full.
+     */
+    private void onFullBattery() {
+
+    }
+
+    /**
+     * Start the calculation when the activity is created.
+     */
+
+    /**
+     * Method to calculate the charging time based on the timely usage.
+     */
+    private void publishChargingText(int level) {
+        chargeSampleList = chargingSampleViewModel.getAll();
+        chargeSampleList.observeForever(chargeSamplesObserver);
+    }
+
+    Observer<List<ChargingSampleModel>> chargeSamplesObserver = new Observer<List<ChargingSampleModel>>() {
+        @Override
+        public void onChanged(List<ChargingSampleModel> chargingSampleModels) {
+            chargeSampleList.removeObserver(chargeSamplesObserver);
+            long average, sum = 0;
+            for (ChargingSampleModel time : chargingSampleModels) {
+                sum += time.diffTime;
+            }
+
+            //Avoid error: java.lang.ArithmeticException: divide by zero
+            if (chargingSampleModels.size() == 0)
+                return;
+
+            average = (sum / (chargingSampleModels.size())) * (100 - store.getInt(bat_level));
+
+            //Since charging cannot take days
+            //int days = (int) TimeUnit.MILLISECONDS.toDays(average);
+            int hours = (int) (TimeUnit.MILLISECONDS.toHours(average) % TimeUnit.DAYS.toHours(1));
+            int mins = (int) (TimeUnit.MILLISECONDS.toMinutes(average) % TimeUnit.HOURS.toMinutes(1));
+
+            onChargingTimePublish(hours, mins);
+        }
+    };
+
+    /**
+     * Method to calculate the discharging time based on the timely usage.
+     */
+    private void publishDischargingText(int level) {
+        dischargeSampleList = dischargingSampleViewModel.getAll();
+        dischargeSampleList.observeForever(dischargeSampleListObserver);
+    }
+
+    Observer<List<DischargingSampleModel>> dischargeSampleListObserver = new Observer<List<DischargingSampleModel>>() {
+        @Override
+        public void onChanged(List<DischargingSampleModel> dischargingSampleModels) {
+            dischargeSampleList.removeObserver(dischargeSampleListObserver);
+            long average, sum = 0;
+            for (DischargingSampleModel time : dischargingSampleModels) {
+                sum += time.diffTime;
+            }
+
+            //Avoid error: java.lang.ArithmeticException: divide by zero
+            if (dischargingSampleModels.size() == 0)
+                return;
+
+            average = (sum / (dischargingSampleModels.size())) * store.getInt(bat_level);
+
+            int days = (int) TimeUnit.MILLISECONDS.toDays(average);
+            int hours = (int) (TimeUnit.MILLISECONDS.toHours(average) % TimeUnit.DAYS.toHours(1));
+            int mins = (int) (TimeUnit.MILLISECONDS.toMinutes(average) % TimeUnit.HOURS.toMinutes(1));
+
+            onDischargeTimePublish(days, hours, mins);
+        }
+    };
+
+    private void startForegroundChecker() {
+        appChecker = new AppChecker();
+        appChecker
+                .when(getPackageName(), new AppChecker.Listener() {
+                    @Override
+                    public void onForeground(String packageName) {
+                        packageDetected = packageName;
+                        observer(packageName);
+
+                        //if (!lastPackageDetected.equals(packageName))
+                        //Toast.makeText(getBaseContext(), "Our app is in the foreground.", Toast.LENGTH_SHORT).show();
+
+                        lastPackageDetected = packageName;
+                    }
+                })
+                .whenOther(new AppChecker.Listener() {
+                    @Override
+                    public void onForeground(String packageName) {
+                        observer(packageName);
+
+                        //Toast.makeText(getBaseContext(), "Foreground: " + packageName, Toast.LENGTH_SHORT).show();
+                        //}
+
+                        lastPackageDetected = packageName;
+                    }
+                })
+                .timeout(5000)
+                .start(this);
+    }
+
+    private void stopForegroundChecker() {
+        appChecker.stop();
+    }
+
+    private void observer(String packageName) {
+        packageDetected = packageName;
+        //Get only current in mAh only once per app but exception below
+        if (!lastPackageDetected.equals(packageName) ||
+                //if bat_current is less than the currentBeforeAppOnForeground, then use the bat_current value
+                (lastPackageDetected.equalsIgnoreCase(packageName) && currentBeforeAppOnForeground < store.getInt(bat_current))) {
+            currentBeforeAppOnForeground = store.getInt(bat_current);
+        }
+
+        final Handler handler = new Handler(Looper.getMainLooper());
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                usageModel = usageViewModel.findUsage(packageName);
+                usageModel.observeForever(appUsageObserver);
+            }
+        }, 4000);
+
+    }
+
+    Observer<UsageModel> appUsageObserver = new Observer<UsageModel>() {
+        @Override
+        public void onChanged(@Nullable UsageModel um) {
+            if (um != null) {
+                logStatic(lastPackageDetected + " is now saved");
+            } else {
+                logStatic(packageDetected + " is not saved yet");
+                um = new UsageModel();
+            }
+            usageModel.removeObserver(appUsageObserver);
+
+            um.packageName = packageDetected;
+            um.current_beforeLaunch = currentBeforeAppOnForeground;
+            um.current_mAh = store.getInt(bat_current);
+            um.avg_mAh = store.getInt(bat_current_avg);
+            um.capacity_mAh = store.getInt(bat_capacity);
+            um.current_battery_percent = store.getInt(bat_level);
+            if (currentBeforeAppOnForeground > um.current_mAh) {
+                /*
+                means currentB4 launch is positive and current_mAh is negative
+                before launch = 100, after launch  = -200
+                 */
+                if (currentBeforeAppOnForeground > 0 && um.current_mAh < 0)
+                    um.mAh = Math.abs((int) um.current_beforeLaunch - (int) um.current_mAh);
+                else if (currentBeforeAppOnForeground > 0 && um.current_mAh > 0)
+                    um.mAh = (int) Math.abs(um.current_beforeLaunch) - (int) um.current_mAh;
+                else if (currentBeforeAppOnForeground < 0 && um.current_mAh < 0)
+                    um.mAh = (int) Math.abs(um.current_mAh) - (int) Math.abs(um.current_beforeLaunch);
+
+                usageViewModel.insert(um);
+            }
+        }
+    };
 
 }

@@ -105,6 +105,10 @@ public class AlertDetailsActivity extends BaseActivity {
                 store.getBoolean(announceOnVertFastCharging) : store.getBoolean(announceOnVertFastDisharging));
         viewDataBinding.checkboxAnnounceSuperFast.setChecked(screen_type == 3 ?
                 store.getBoolean(announceOnSuperFastCharging) : store.getBoolean(announceOnSuperFastDisharging));
+        viewDataBinding.checkboxAnnounceIncludePercentage
+                .setChecked(screen_type == 3 ?
+                        store.getBoolean(includePercentAtTheEndOfAnnouncementCharging) :
+                        store.getBoolean(includePercentAtTheEndOfAnnouncementDisCharging));
 
         viewDataBinding.editTextInterval.setText(
                 String.format(Locale.US, "%d",
@@ -254,6 +258,12 @@ public class AlertDetailsActivity extends BaseActivity {
                 viewDataBinding.radioButtonTextToSpeech.setChecked(true);
             }
         }
+
+        viewDataBinding.checkboxAnnounceIncludePercentage.setOnCheckedChangeListener((compoundButton, b) -> {
+            store.setBoolean(screen_type == 3 ?
+                    includePercentAtTheEndOfAnnouncementCharging :
+                    includePercentAtTheEndOfAnnouncementDisCharging, b);
+        });
 
         viewDataBinding.buttonSave.setOnClickListener((View.OnClickListener) view -> {
             if (!TextUtils.isEmpty(viewDataBinding.editTextMedia.getText().toString())) {

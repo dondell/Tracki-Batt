@@ -2,4 +2,11 @@
     <string name="app_name">Tracki Batt</string>
     <string name="off">Off</string>
     <string name="on">On</string>
+    <string name="permission_message">You need to grant access to usage stats\n GRANT PERMISSION \n<b>Click here to grant</b></string>
+    <string name="last_time_used_never">Last used: never</string>
+    <string name="last_time_used">Last used: %1$s</string>
+    <string name="total_time_foreground_used">Total foreground hrs: %1$s</string>
+    <string name="total_first_timestamp">First used: %1$s</string>
+    <string name="total_last_timestamp">Last used: %1$s</string>
+    <string name="computing">Computing...</string>
 </resources>

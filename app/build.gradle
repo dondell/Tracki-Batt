@@ -8,7 +8,7 @@ android {
 
     defaultConfig {
         applicationId "com.ami.batterwatcher"
-        minSdkVersion 16
+        minSdkVersion 21
         targetSdkVersion 30
         //versionCode 1
         //versionName "1.2"
@@ -51,8 +51,9 @@ dependencies {
     implementation 'androidx.localbroadcastmanager:localbroadcastmanager:1.0.0'
     implementation 'com.google.code.gson:gson:2.8.6'
     implementation 'androidx.room:room-runtime:2.2.6'
+    implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.0.0'
     //roomdatabase
-    annotationProcessor 'android.arch.persistence.room:compiler:1.1.1'
+    annotationProcessor 'androidx.room:room-compiler:2.0.0'
     implementation 'com.karumi:dexter:6.2.1'
     annotationProcessor 'androidx.room:room-compiler:2.2.6'
     def lifecycle_version = "2.2.0"

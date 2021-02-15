@@ -30,7 +30,8 @@
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                android:paddingBottom="@dimen/_15sdp">
 
                 <TextView
                     android:id="@+id/textView_text1"
@@ -478,8 +479,8 @@
                     android:layout_marginLeft="@dimen/_15sdp"
                     android:layout_marginTop="@dimen/_10sdp"
                     android:layout_marginEnd="@dimen/_15sdp"
-                    android:orientation="vertical"
                     android:layout_marginRight="@dimen/_15sdp"
+                    android:orientation="vertical"
                     app:layout_constraintTop_toBottomOf="@id/textView_announce">
 
                     <CheckBox
@@ -528,6 +529,21 @@
                         android:layout_height="wrap_content"
                         android:buttonTint="?attr/image_tint_color"
                         android:text="Super fast"
+                        android:textColor="@color/white" />
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="0.03dp"
+                        android:layout_marginTop="@dimen/_4sdp"
+                        android:layout_marginBottom="@dimen/_4sdp"
+                        android:background="@color/white" />
+
+                    <CheckBox
+                        android:id="@+id/checkbox_announceIncludePercentage"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:buttonTint="?attr/image_tint_color"
+                        android:text="Check if you want to hear the word percent at the end."
                         android:textColor="@color/white" />
                 </LinearLayout>
 

@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <!--    ?android:attr/listPreferredItemHeight-->
+
+    <ImageView
+        android:id="@+id/icon"
+        android:layout_width="55dp"
+        android:layout_height="55dp"
+        android:layout_alignParentLeft="true"
+        android:layout_centerVertical="true"
+        android:paddingStart="8dp"
+        android:paddingLeft="8dp"
+        android:paddingEnd="16dp"
+        android:paddingRight="16dp"
+        tools:src="@mipmap/ic_launcher" />
+
+    <TextView
+        android:id="@+id/title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_toEndOf="@id/icon"
+        android:layout_toRightOf="@id/icon"
+        android:lines="1"
+        android:maxLines="1"
+        android:paddingTop="8dp"
+        android:textAppearance="@style/TextAppearance.AppCompat.Title"
+        android:textColor="@color/black"
+        tools:text="Google" />
+
+
+    <TextView
+        android:id="@+id/total_lastTimeStamp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/title"
+        android:layout_toEndOf="@id/icon"
+        android:layout_toRightOf="@id/icon"
+        android:paddingBottom="8dp"
+        android:textAppearance="@style/TextAppearance.AppCompat.Subhead"
+        android:textColor="@color/black"
+        android:visibility="gone"
+        tools:text="Last timestamp: 2/1/21 09:01:02 PM" />
+
+    <TextView
+        android:id="@+id/total_firstTimeStamp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/total_lastTimeStamp"
+        android:layout_toEndOf="@id/icon"
+        android:layout_toRightOf="@id/icon"
+        android:textAppearance="@style/TextAppearance.AppCompat.Subhead"
+        android:textColor="@color/black"
+        android:visibility="gone"
+        tools:text="First time: 2/1/21 09:01:02 PM" />
+
+    <TextView
+        android:id="@+id/last_used"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/total_lastTimeStamp"
+        android:layout_toEndOf="@id/icon"
+        android:visibility="gone"
+        android:layout_toRightOf="@id/icon"
+        android:textAppearance="@style/TextAppearance.AppCompat.Subhead"
+        android:textColor="@color/black"
+        tools:text="Last used: yesterday at 18.54" />
+
+    <TextView
+        android:id="@+id/total_timeForeground"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/last_used"
+        android:layout_toEndOf="@id/icon"
+        android:visibility="gone"
+        android:layout_toRightOf="@id/icon"
+        android:textAppearance="@style/TextAppearance.AppCompat.Subhead"
+        android:textColor="@color/black"
+        tools:text="Total foreground hrs: 09:01:02" />
+
+    <TextView
+        android:id="@+id/total_usageDetails"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/total_timeForeground"
+        android:layout_toEndOf="@id/icon"
+        android:layout_toRightOf="@id/icon"
+        android:textAppearance="@style/TextAppearance.AppCompat.Subhead"
+        android:textColor="@color/black"
+        tools:text="Usage:" />
+
+
+</RelativeLayout>

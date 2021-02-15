@@ -1,5 +1,6 @@
 package com.ami.batterwatcher.view;
 
+import android.app.ActivityManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -8,8 +9,6 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.media.AudioManager;
 import android.net.Uri;
-import android.os.BatteryManager;
-import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.speech.tts.TextToSpeech;
@@ -43,12 +42,12 @@ import com.ami.batterwatcher.viewmodels.ChargeWithPercentageModel;
 import com.ami.batterwatcher.viewmodels.PercentageModel;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.Set;
 
 public class MainActivity extends BaseActivity {
 
@@ -92,6 +91,7 @@ public class MainActivity extends BaseActivity {
     @Override
     protected void setData() {
         // Get a new or existing ViewModel from the ViewModelProvider.
+        store.setInt(bat_capacity, (int) BaseActivity.getBatteryCapacity(getApplicationContext()));
         viewModel = new ViewModelProvider(this).get(AlertViewModel.class);
         chargeViewModel = new ViewModelProvider(this).get(ChargeViewModel.class);
         models = new ArrayList<>();
@@ -167,6 +167,11 @@ public class MainActivity extends BaseActivity {
 
     @Override
     protected void setListeners() {
+        viewDataBinding.imageViewBatteryUsage.setOnClickListener(view -> {
+            Intent batteryUsageIntent = new Intent(MainActivity.this, UsageActivity.class);
+            startActivity(batteryUsageIntent);
+        });
+
         viewDataBinding.imageViewBatteryInfo.setOnClickListener(view -> {
             Intent batteryInfoIntent = new Intent(MainActivity.this, BatteryInfoActivity.class);
             startActivity(batteryInfoIntent);
@@ -247,6 +252,7 @@ public class MainActivity extends BaseActivity {
                     viewDataBinding.textViewChargingStatus.setText("isCharging = false");
                     store.setBoolean(isCharging, false);
                 }
+                setBatteryInfo();
                 handler.postDelayed(this, 1000);
             }
         }, 1000);
@@ -313,10 +319,8 @@ public class MainActivity extends BaseActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        setBatteryInfo();
         startBatteryService();
         //mWaveHelper.start();
-        initializeTTS();
         if (batteryService != null) {
             batteryService.initializeTTS();
         }
@@ -369,61 +373,28 @@ public class MainActivity extends BaseActivity {
                                 store.getInt(startTimeHr), store.getInt(startTimeMn)) + "-"));
         viewDataBinding.includeSetting.textViewStopTime.setText(
                 convertTimePickerTime(store.getInt(stopTimeHr), store.getInt(stopTimeMn)));
+
+        ActivityManager activityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        activityManager.killBackgroundProcesses("com.skype.raider");
+
+        Method forceStopPackage = null;
+        try {
+            forceStopPackage = activityManager.getClass().getDeclaredMethod("forceStopPackage", String.class);
+            forceStopPackage.setAccessible(true);
+            forceStopPackage.invoke(activityManager, "com.skype.raider");
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         //mWaveHelper.cancel();
-    }
-
-    private void initializeTTS() {
-        initTTSSuccessfull = false;
-        tts = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
-            @Override
-            public void onInit(int i) {
-                if (i == TextToSpeech.SUCCESS) {
-                    initTTSSuccessfull = true;
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                        defaultTTSVoice = tts.getDefaultVoice();
-                    }
-
-                    log("TTS successfully initialized");
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                        for (Voice tmpVoice : tts.getVoices()) {
-                            //log("tts voice " + tmpVoice.getName());
-                            if (tmpVoice.getName().contains("female")) {
-                                //log("found female voice " + tmpVoice.getName());
-                                store.saveString(ttsFemale, tmpVoice.getName());
-                            }
-                            if (tmpVoice.getName().contains("male")) {
-                                //log("found male voice " + tmpVoice.getName());
-                                store.saveString(ttsMale, tmpVoice.getName());
-                            }
-                        }
-
-                        Set<String> a = new HashSet<>();
-                        a.add("male");//here you can give male if you want to select male voice.
-                        //Voice v=new Voice("en-us-x-sfg#female_2-local",new Locale("en","US"),400,200,true,a);
-                        Voice v = new Voice(store.getInt(ttsVoiceType, 2) == 1 ?
-                                "en-us-x-sfg#male_2-local" : "es-us-x-sfb#female_1-local",
-                                new Locale("en", "US"),
-                                400, 200, true, a);
-                        int result = tts.setVoice(v);
-                        tts.setSpeechRate(0.8f);
-
-                        if (result == TextToSpeech.LANG_MISSING_DATA
-                                || result == TextToSpeech.LANG_NOT_SUPPORTED) {
-                            log("This Language is not supported");
-                            if (null != defaultTTSVoice)
-                                tts.setVoice(defaultTTSVoice);
-                        }
-
-                    }
-
-                }
-            }
-        });
     }
 
     private class BroadcastReceiver extends android.content.BroadcastReceiver {
@@ -452,17 +423,8 @@ public class MainActivity extends BaseActivity {
         if (storedPreviousBatLevel == -1) {
             store.setInt(previousBatValueKey, currentBattLevel);
         }
-    }
-
-    private void playTTS(String tell, int percentage) {
-        tts.speak(tell + " " + percentage, TextToSpeech.QUEUE_ADD, null);
-        log("playTTS");
-
-        //Set volume previous volume level set by user
-        if (checkModifyMaxVolumePermissionNoPrompt() && store.getBoolean(ignoreSystemAudioProfile, false)) {
-            audio.setStreamVolume(AudioManager.STREAM_MUSIC, currentMusicVolume, AudioManager.FLAG_REMOVE_SOUND_AND_VIBRATE);
-            audio.setStreamVolume(AudioManager.STREAM_RING, currentRingtoneVolume, 0);
-        }
+        viewDataBinding.textViewChargingTimeRemaining.setText(
+                store.getString(remainingTimeForBatteryToDrainOrCharge, "Computing time..."));
     }
 
     @Override
@@ -498,4 +460,5 @@ public class MainActivity extends BaseActivity {
             batteryService = mLocalBinder.getServerInstance();
         }
     };
+
 }

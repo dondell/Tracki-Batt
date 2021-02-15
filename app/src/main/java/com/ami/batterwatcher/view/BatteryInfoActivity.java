@@ -12,7 +12,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 
 import androidx.databinding.DataBindingUtil;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.ami.batterwatcher.R;
 import com.ami.batterwatcher.base.BaseActivity;

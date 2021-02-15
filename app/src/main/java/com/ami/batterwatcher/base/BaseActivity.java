@@ -83,7 +83,10 @@ public abstract class BaseActivity extends AppCompatActivity {
     public static final String announceOnVertFastDisharging = "announceOnVertFastDisharging"; //boolean
     public static final String announceOnSuperFastCharging = "announceOnSuperFastCharging"; //boolean
     public static final String announceOnSuperFastDisharging = "announceOnSuperFastDisharging"; //boolean
+    public static final String includePercentAtTheEndOfAnnouncementCharging = "includePercentAtTheEndOfAnnouncementCharging"; //boolean
+    public static final String includePercentAtTheEndOfAnnouncementDisCharging = "includePercentAtTheEndOfAnnouncementDisCharging"; //boolean
     //Battery keys
+    public static final String bat_capacity = "bat_capacity"; //int
     public static final String bat_current = "bat_current"; //int
     public static final String bat_current_avg = "bat_current_avg"; //int
     public static final String bat_isPresent = "bat_isPresent"; //boolean
@@ -95,6 +98,15 @@ public abstract class BaseActivity extends AppCompatActivity {
     public static final String bat_health = "bat_health"; //int
     public static final String bat_status = "bat_status"; //int
     public static final String bat_plugged = "bat_plugged"; //int
+    public static final String remainingTimeForBatteryToDrainOrCharge = "remainingTimeForBatteryToDrainOrCharge"; //String
+    public static final String remainingTimeForBatteryToDrainOrChargeDy = "remainingTimeForBatteryToDrainOrChargeDy"; //int
+    public static final String remainingTimeForBatteryToDrainOrChargeHr = "remainingTimeForBatteryToDrainOrChargeHr"; //int
+    public static final String remainingTimeForBatteryToDrainOrChargeMn = "remainingTimeForBatteryToDrainOrChargeMn"; //int
+
+    //Save charging samples
+    public static final String chargingSampleId = "chargingSampleId"; //int
+    //Save discharging samples
+    public static final String disChargingSampleId = "disChargingSampleId"; //int
 
     private static final int REQUEST_CODE_MAX_VOL = 1001;
     public static final int REQUEST_TTS_DATA_CHECK_CODE = 1002;
@@ -464,7 +476,7 @@ public abstract class BaseActivity extends AppCompatActivity {
      * @param context     current Context, like Activity, App, or Service
      * @param packageName the full package name of the app to open
      * @return true if likely successful, false if unsuccessful
-     *
+     * <p>
      * e.g openApp(this, "com.google.android.maps.mytracks");
      * https://stackoverflow.com/a/7596063
      */
@@ -482,6 +494,41 @@ public abstract class BaseActivity extends AppCompatActivity {
         } catch (ActivityNotFoundException e) {
             return false;
         }
+    }
+
+    public static double getBatteryCapacity(Context context) {
+        // Power profile class instance
+        Object mPowerProfile_ = null;
+
+        // Reset variable for battery capacity
+        double batteryCapacity = 0;
+
+        // Power profile class name
+        final String POWER_PROFILE_CLASS = "com.android.internal.os.PowerProfile";
+
+        try {
+            // Get power profile class and create instance. We have to do this
+            // dynamically because android.internal package is not part of public API
+            mPowerProfile_ = Class.forName(POWER_PROFILE_CLASS)
+                    .getConstructor(Context.class)
+                    .newInstance(context);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        try {
+            // Invoke PowerProfile method "getAveragePower" with param "battery.capacity"
+            batteryCapacity = (Double) Class
+                    .forName(POWER_PROFILE_CLASS)
+                    .getMethod("getAveragePower", java.lang.String.class)
+                    .invoke(mPowerProfile_, "battery.capacity");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return batteryCapacity;
     }
 
 }
