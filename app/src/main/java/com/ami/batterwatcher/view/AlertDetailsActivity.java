@@ -85,13 +85,19 @@ public class AlertDetailsActivity extends BaseActivity {
             viewDataBinding.textViewMode.setText("Charging");
             chargeModelId = 1;
             percentageViewModel.getAllChargingItems().observe(this, this::setCheckBoxes);
+            viewDataBinding.checkboxPlayLoudBeepOnBelowTenPercent.setVisibility(View.GONE);
         } else if (screen_type == 4) {
             setActivityTitle("Edit Discharging");
             viewDataBinding.textViewAnnounce.setText("On discharging announcement");
             viewDataBinding.textViewMode.setText("Discharging");
             chargeModelId = 2;
             percentageViewModel.getAllDischargingItems().observe(this, this::setCheckBoxes);
+            viewDataBinding.checkboxPlayLoudBeepOnBelowTenPercent.setVisibility(View.VISIBLE);
         }
+
+        viewDataBinding.checkboxPlayLoudBeepOnBelowTenPercent.setChecked(
+                store.getBoolean(playLoudBeepOnBelowTenPercent)
+        );
 
         viewDataBinding.checkboxAnnounceVerySlow.setChecked(screen_type == 3 ?
                 store.getBoolean(announceOnVerySlowCharging) : store.getBoolean(announceOnVerySlowDisharging));
@@ -120,6 +126,15 @@ public class AlertDetailsActivity extends BaseActivity {
                 store.getBoolean(screen_type == 3 ?
                         enableRepeatedAlertForPercentageForCharging :
                         enableRepeatedAlertForPercentageForDisCharging, true));
+
+        viewDataBinding.radioButtonAnnouncePercentRange.setChecked(
+                store.getBoolean(screen_type == 3 ?
+                        chargingAnnouncePercentBaseOnRange : dischargingAnnouncePercentBaseOnRange)
+        );
+        viewDataBinding.radioButtonAnnounceExactPercent.setChecked(
+                store.getBoolean(screen_type == 3 ?
+                        chargingAnnouncePercentExactValue : dischargingAnnouncePercentExactValue)
+        );
     }
 
     private void setCheckBoxes(List<PercentageModel> list) {
@@ -180,6 +195,9 @@ public class AlertDetailsActivity extends BaseActivity {
         viewDataBinding.checkbox100.setOnCheckedChangeListener((compoundButton, b) ->
                 percentageViewModel.insert(new PercentageModel(screen_type == 3 ? 12 : 24, 100, chargeModelId, b)));
 
+        viewDataBinding.checkboxPlayLoudBeepOnBelowTenPercent.setOnCheckedChangeListener(((compoundButton, b) -> {
+            store.setBoolean(playLoudBeepOnBelowTenPercent, b);
+        }));
         viewDataBinding.checkboxAnnounceVerySlow.setOnCheckedChangeListener(((compoundButton, b) -> {
             store.setBoolean(screen_type == 3 ?
                     announceOnVerySlowCharging : announceOnVerySlowDisharging, b);
@@ -288,6 +306,15 @@ public class AlertDetailsActivity extends BaseActivity {
             chargeViewModel.insert(chargeModel);
 
             onBackPressed();
+        });
+
+        viewDataBinding.radioGroupPercentAnnounceOption.setOnCheckedChangeListener((radioGroup, i) -> {
+            store.setBoolean(screen_type == 3 ?
+                            chargingAnnouncePercentBaseOnRange : dischargingAnnouncePercentBaseOnRange,
+                    viewDataBinding.radioButtonAnnouncePercentRange.isChecked());
+            store.setBoolean(screen_type == 3 ?
+                            chargingAnnouncePercentExactValue : dischargingAnnouncePercentExactValue,
+                    viewDataBinding.radioButtonAnnounceExactPercent.isChecked());
         });
     }
 

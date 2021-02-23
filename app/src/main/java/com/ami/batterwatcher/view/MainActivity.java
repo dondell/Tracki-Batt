@@ -71,9 +71,26 @@ public class MainActivity extends BaseActivity {
     FirebaseCrashlytics mCrashlytics;
     int t = 0;
     Handler handler = new Handler();
+    Runnable myRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (BaseActivity.isCharging(mContext)) {
+                viewDataBinding.textViewChargingStatus.setText("isCharging = true");
+                store.setBoolean(isCharging, true);
+            } else {
+                viewDataBinding.textViewChargingStatus.setText("isCharging = false");
+                store.setBoolean(isCharging, false);
+            }
+            if (active) {
+                setBatteryInfo();
+                handler.postDelayed(this, 1000);
+            }
+        }
+    };
     //private WaveHelper mWaveHelper;
     private BatteryService batteryService;
     private boolean mBounded;
+    private boolean active = false;
 
     @Override
     protected int setLayout() {
@@ -241,21 +258,6 @@ public class MainActivity extends BaseActivity {
                 }
             }
         });
-
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                if (BaseActivity.isCharging(mContext)) {
-                    viewDataBinding.textViewChargingStatus.setText("isCharging = true");
-                    store.setBoolean(isCharging, true);
-                } else {
-                    viewDataBinding.textViewChargingStatus.setText("isCharging = false");
-                    store.setBoolean(isCharging, false);
-                }
-                setBatteryInfo();
-                handler.postDelayed(this, 1000);
-            }
-        }, 1000);
     }
 
     private void startBatteryService() {
@@ -302,6 +304,7 @@ public class MainActivity extends BaseActivity {
     @Override
     protected void onStart() {
         super.onStart();
+        active = true;
         Intent mIntent = new Intent(this, BatteryService.class);
         bindService(mIntent, mConnection, BIND_AUTO_CREATE);
     }
@@ -319,6 +322,10 @@ public class MainActivity extends BaseActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        active = true;
+        handler.removeCallbacks(myRunnable);
+        handler.postDelayed(myRunnable, 1000);
+
         startBatteryService();
         //mWaveHelper.start();
         if (batteryService != null) {
@@ -394,6 +401,8 @@ public class MainActivity extends BaseActivity {
     @Override
     protected void onPause() {
         super.onPause();
+        active = false;
+        handler.removeCallbacks(myRunnable);
         //mWaveHelper.cancel();
     }
 
@@ -402,7 +411,9 @@ public class MainActivity extends BaseActivity {
         public void onReceive(Context arg0, Intent intent) {
             if (intent.getAction().equalsIgnoreCase("YourAction")) {
                 currentBattLevel = intent.getIntExtra("batteryLevel", -1);
-                setBatteryInfo();
+
+                if (active)
+                    setBatteryInfo();
             }
         }
     }

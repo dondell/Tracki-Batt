@@ -2,8 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     package="com.ami.batterwatcher"
-    android:versionCode="202102122"
-    android:versionName="1.0.41">
+    android:versionCode="202102231"
+    android:versionName="1.0.45">
 
     <uses-permission
         android:name="android.permission.PACKAGE_USAGE_STATS"

@@ -1,15 +1,17 @@
 package com.ami.batterwatcher.usage;
 
+import android.content.ActivityNotFoundException;
+import android.content.Intent;
+import android.net.Uri;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.ami.batterwatcher.R;
 import com.ami.batterwatcher.base.BaseActivity;
-import com.ami.batterwatcher.data.usage.UsageViewModel;
 
 import java.util.Locale;
 
@@ -18,7 +20,6 @@ import static com.ami.batterwatcher.base.BaseActivity.remainingTimeForBatteryToD
 public class UsageStatVH extends RecyclerView.ViewHolder {
 
     private BaseActivity baseActivity;
-    private UsageViewModel usageViewModel;
     private ImageView appIcon;
     private TextView appName;
     private TextView lastTimeUsed;
@@ -26,20 +27,19 @@ public class UsageStatVH extends RecyclerView.ViewHolder {
     private TextView total_firstTimeStamp;
     private TextView total_lastTimeStamp;
     private TextView total_usageDetails;
+    private ProgressBar progressBar;
 
     public UsageStatVH(View itemView, BaseActivity baseActivity) {
         super(itemView);
         this.baseActivity = baseActivity;
-        usageViewModel = new ViewModelProvider
-                .AndroidViewModelFactory(baseActivity.getApplication())
-                .create(UsageViewModel.class);
         appIcon = itemView.findViewById(R.id.icon);
         appName = itemView.findViewById(R.id.title);
-        lastTimeUsed = itemView.findViewById(R.id.last_used);
+        progressBar = itemView.findViewById(R.id.progressBar);
+       /* lastTimeUsed = itemView.findViewById(R.id.last_used);
         total_timeForeground = itemView.findViewById(R.id.total_timeForeground);
         total_firstTimeStamp = itemView.findViewById(R.id.total_firstTimeStamp);
+        total_usageDetails = itemView.findViewById(R.id.total_usageDetails);*/
         total_lastTimeStamp = itemView.findViewById(R.id.total_lastTimeStamp);
-        total_usageDetails = itemView.findViewById(R.id.total_usageDetails);
     }
 
     public void bindTo(UsageStatsWrapper usageStatsWrapper) {
@@ -47,23 +47,23 @@ public class UsageStatVH extends RecyclerView.ViewHolder {
             if (null != usageStatsWrapper.getAppIcon())
                 appIcon.setImageDrawable(usageStatsWrapper.getAppIcon());
             appName.setText(usageStatsWrapper.getAppName());
-            if (usageStatsWrapper.getUsageStats() == null) {
+            /*if (usageStatsWrapper.getUsageStats() == null) {
                 lastTimeUsed.setText(R.string.last_time_used_never);
             } else if (usageStatsWrapper.getUsageStats().getLastTimeUsed() == 0L) {
                 lastTimeUsed.setText(R.string.last_time_used_never);
             } else {
                 lastTimeUsed.setText(App.getApp().getString(R.string.last_time_used,
                         DateUtils.format(usageStatsWrapper)));
-            }
+            }*/
 
-            if (usageStatsWrapper.getUsageStats() != null) {
-                /*total_firstTimeStamp.setText(App.getApp().getString(R.string.total_first_timestamp,
-                        DateUtils.formatStandardDateTime(usageStatsWrapper.getUsageStats().getFirstTimeStamp())));*/
+            /*if (usageStatsWrapper.getUsageStats() != null) {
+             *//*total_firstTimeStamp.setText(App.getApp().getString(R.string.total_first_timestamp,
+                        DateUtils.formatStandardDateTime(usageStatsWrapper.getUsageStats().getFirstTimeStamp())));*//*
 
-                /*
+             *//*
                 Not accurate
                 total_firstTimeStamp.setText(App.getApp().getString(R.string.total_first_timestamp,
-                        " " + usageStatsWrapper.getUsageStats().getFirstTimeStamp()));*/
+                        " " + usageStatsWrapper.getUsageStats().getFirstTimeStamp()));*//*
 
                 total_firstTimeStamp.setVisibility(View.GONE);
 
@@ -72,27 +72,25 @@ public class UsageStatVH extends RecyclerView.ViewHolder {
 
                 total_lastTimeStamp.setText(App.getApp().getString(R.string.total_last_timestamp,
                         DateUtils.formatStandardDateTime(usageStatsWrapper.getUsageStats().getLastTimeStamp())));
-            }
+            }*/
 
             if (null != usageStatsWrapper.usageModel) {
-                // total capacity mAh * battery percent / 100 to get remaining capacity mAh
-                float remainingCap = (usageStatsWrapper.usageModel.capacity_mAh * usageStatsWrapper.usageModel.current_battery_percent / 100.0f);
-                // remaining capacity mAh(base on battery percentage) e.g 50% /(divide) hour remaining
-                int hourRemaining = baseActivity.store.getInt(BaseActivity.remainingTimeForBatteryToDrainOrChargeHr);
-                int mnRemaining = baseActivity.store.getInt(BaseActivity.remainingTimeForBatteryToDrainOrChargeMn);
-                float perHour_mAhUsage = remainingCap / hourRemaining;
-                // get percentage of app usage per hour
-                //float app_discharging_speed = (usageModel.mAh / perHour_mAhUsage) * 100;
-                float app_discharging_speed = ((usageStatsWrapper.usageModel.capacity_mAh / remainingCap) * 100.0f);
+
 
                 if (baseActivity.store.getString(remainingTimeForBatteryToDrainOrCharge)
                         .contains("Computing")) {
-                    total_usageDetails.setText(baseActivity.getString(R.string.computing));
+                    total_lastTimeStamp.setText(baseActivity.getString(R.string.computing));
                 } else {
-                    total_usageDetails.setText(String.format(Locale.US, "Usage: %.2f%%/h, %s mAh"
-                            , (app_discharging_speed > 100 ? 100 : app_discharging_speed),
-                            usageStatsWrapper.usageModel.mAh)
-                    );
+                    total_lastTimeStamp.setText(String.format(Locale.US, "%s",
+                            usageStatsWrapper.usageComputation));
+                    progressBar.setProgress((int) usageStatsWrapper.percentage);
+
+                    /*total_usageDetails.setText(String.format(Locale.US, "" +
+                                    "Speed: %.2f%%/h, %s mAh \n" +
+                                    "Usage: %.2f%%, %s mAh"
+                            , (app_discharging_speed > 100 ? 100 : app_discharging_speed), usageStatsWrapper.usageModel.mAh
+                            , app_percentage_used, usageStatsWrapper.usageModel.mAh)
+                    );*/
 
                             /*
                             //This is the details
@@ -120,6 +118,25 @@ public class UsageStatVH extends RecyclerView.ViewHolder {
 
                 }
             }
+        }
+
+        itemView.setOnClickListener(v -> {
+            goToAppInfo(usageStatsWrapper.packageName);
+        });
+    }
+
+    public void goToAppInfo(String packageName) {
+        try {
+            //Open the specific App Info page:
+            Intent intent = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+            intent.setData(Uri.parse("package:" + packageName));
+            baseActivity.startActivity(intent);
+        } catch (ActivityNotFoundException e) {
+            //e.printStackTrace();
+            //Open the generic Apps page:
+            Intent intent = new Intent(android.provider.Settings.ACTION_MANAGE_APPLICATIONS_SETTINGS);
+            baseActivity.startActivity(intent);
+
         }
     }
 }

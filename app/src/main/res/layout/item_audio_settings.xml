@@ -44,7 +44,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="8dp"
                 android:background="@color/transparent"
-                android:text="Audio announcements settings"
+                android:text="Voice announcements"
                 android:textColor="@color/greenAlpha"
                 android:textStyle="bold"
                 app:layout_constraintBottom_toTopOf="@+id/textView_text2"

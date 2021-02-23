@@ -14,6 +14,9 @@ public final class UsageStatsWrapper implements Comparable<UsageStatsWrapper> {
     private final String appName;
     public String packageName;
     public UsageModel usageModel;
+    public String speedComputation;
+    public String usageComputation;
+    public float percentage;
 
     public UsageStatsWrapper(UsageStats usageStats, Drawable appIcon, String appName) {
         this.usageStats = usageStats;
@@ -57,8 +60,8 @@ public final class UsageStatsWrapper implements Comparable<UsageStatsWrapper> {
         } else if (usageStatsWrapper.usageModel == null && usageModel == null) {
             return 0;
         } else {
-            return Float.compare(usageStatsWrapper.usageModel.mAh,
-                    usageModel.mAh);
+            return Float.compare(usageStatsWrapper.percentage,
+                    usageModel.percentage);
         }
     }
 }

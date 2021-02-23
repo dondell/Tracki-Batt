@@ -9,9 +9,9 @@ import androidx.room.RoomDatabase;
 import androidx.room.migration.Migration;
 import androidx.sqlite.db.SupportSQLiteDatabase;
 
-import com.ami.batterwatcher.data.usage.UsageDao;
 import com.ami.batterwatcher.data.usage.ChargingSampleDao;
 import com.ami.batterwatcher.data.usage.DischargingSampleDao;
+import com.ami.batterwatcher.data.usage.UsageDao;
 import com.ami.batterwatcher.viewmodels.AlertModel;
 import com.ami.batterwatcher.viewmodels.ChargeModel;
 import com.ami.batterwatcher.viewmodels.ChargingSampleModel;
@@ -25,7 +25,7 @@ import java.util.concurrent.Executors;
 @Database(entities = {
         AlertModel.class, ChargeModel.class, PercentageModel.class, UsageModel.class,
         ChargingSampleModel.class, DischargingSampleModel.class
-}, version = 6)
+}, version = 7)
 public abstract class AppDatabase extends RoomDatabase {
     public abstract AlertDao userDao();
 
@@ -56,6 +56,7 @@ public abstract class AppDatabase extends RoomDatabase {
                             .addMigrations(MIGRATION_3_4)
                             .addMigrations(MIGRATION_4_5)
                             .addMigrations(MIGRATION_5_6)
+                            .addMigrations(MIGRATION_6_7)
                             .build();
                 }
             }
@@ -63,7 +64,7 @@ public abstract class AppDatabase extends RoomDatabase {
         return INSTANCE;
     }
 
-    private static RoomDatabase.Callback sRoomDatabaseCallback = new RoomDatabase.Callback() {
+    private static final RoomDatabase.Callback sRoomDatabaseCallback = new RoomDatabase.Callback() {
         @Override
         public void onCreate(@NonNull SupportSQLiteDatabase db) {
             super.onCreate(db);
@@ -84,7 +85,7 @@ public abstract class AppDatabase extends RoomDatabase {
                 ChargeDao chargeDao = INSTANCE.chargeDao();
                 chargeDao.deleteAll();
                 chargeDao.insert(new ChargeModel(1, "Charging", "Charging"));
-                chargeDao.insert(new ChargeModel(2, "Dis-charging", "Low batt"));
+                chargeDao.insert(new ChargeModel(2, "Dis-charging", "Draining"));
 
                 PercentageDao percentageDao = INSTANCE.percentageDao();
                 if (percentageDao.findByPercent(3, 1) == null)
@@ -195,6 +196,13 @@ public abstract class AppDatabase extends RoomDatabase {
                     "dischargingSampleId INTEGER  NOT NULL DEFAULT 1," +
                     "diffTime INTEGER NOT NULL DEFAULT 1," +
                     "PRIMARY KEY(`dischargingSampleId`))");
+        }
+    };
+
+    static final Migration MIGRATION_6_7 = new Migration(6, 7) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("ALTER TABLE usagemodel ADD COLUMN timeDuration INTEGER NOT NULL DEFAULT 1");
         }
     };
 

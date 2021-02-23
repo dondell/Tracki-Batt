@@ -12,6 +12,7 @@ import android.media.AudioManager;
 import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -85,6 +86,11 @@ public abstract class BaseActivity extends AppCompatActivity {
     public static final String announceOnSuperFastDisharging = "announceOnSuperFastDisharging"; //boolean
     public static final String includePercentAtTheEndOfAnnouncementCharging = "includePercentAtTheEndOfAnnouncementCharging"; //boolean
     public static final String includePercentAtTheEndOfAnnouncementDisCharging = "includePercentAtTheEndOfAnnouncementDisCharging"; //boolean
+    public static final String playLoudBeepOnBelowTenPercent = "playLoudBeepOnBelowTenPercent"; //boolean
+    public static final String chargingAnnouncePercentBaseOnRange = "chargingAnnouncePercentBaseOnRange"; //boolean
+    public static final String chargingAnnouncePercentExactValue = "chargingAnnouncePercentExactValue"; //boolean
+    public static final String dischargingAnnouncePercentBaseOnRange = "dischargingAnnouncePercentBaseOnRange"; //boolean
+    public static final String dischargingAnnouncePercentExactValue = "dischargingAnnouncePercentExactValue"; //boolean
     //Battery keys
     public static final String bat_capacity = "bat_capacity"; //int
     public static final String bat_current = "bat_current"; //int
@@ -111,6 +117,8 @@ public abstract class BaseActivity extends AppCompatActivity {
     private static final int REQUEST_CODE_MAX_VOL = 1001;
     public static final int REQUEST_TTS_DATA_CHECK_CODE = 1002;
     private SimpleDateFormat formatter;
+
+    public AlertDialog alertDialog;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -529,6 +537,21 @@ public abstract class BaseActivity extends AppCompatActivity {
         }
 
         return batteryCapacity;
+    }
+
+    public void showUsagePermissionTutorial() {
+        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
+        LayoutInflater inflater = this.getLayoutInflater();
+        View dialogView = inflater.inflate(R.layout.alert_dialog_tutorial, null);
+        dialogBuilder.setView(dialogView);
+        Button button_ok = dialogView.findViewById(R.id.button_ok);
+        alertDialog = dialogBuilder.create();
+        if (!isFinishing())
+            alertDialog.show();
+        button_ok.setOnClickListener(view -> {
+            alertDialog.dismiss();
+            startActivity(new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS));
+        });
     }
 
 }

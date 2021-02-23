@@ -67,7 +67,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginLeft="@dimen/_8sdp"
-                        android:layout_marginTop="@dimen/_15sdp"
+                        android:layout_marginTop="@dimen/_4sdp"
                         android:layout_marginRight="@dimen/_8sdp"
                         android:gravity="center_horizontal"
                         android:text="Choose percentage below to be alerted:"
@@ -243,6 +243,17 @@
                             app:layout_constraintStart_toStartOf="@+id/checkbox_30"
                             app:layout_constraintTop_toBottomOf="@+id/checkbox_30" />
 
+                        <CheckBox
+                            android:id="@+id/checkbox_playLoudBeepOnBelowTenPercent"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:buttonTint="?attr/image_tint_color"
+                            android:text="Play loud beep below 10% every time incremental  percentage goes down"
+                            android:textColor="@color/white"
+                            app:layout_constraintEnd_toEndOf="@+id/checkbox_3"
+                            app:layout_constraintStart_toStartOf="@+id/checkbox_20"
+                            app:layout_constraintTop_toBottomOf="@+id/checkbox_20" />
+
                     </androidx.constraintlayout.widget.ConstraintLayout>
 
                     <androidx.constraintlayout.widget.ConstraintLayout
@@ -254,7 +265,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginLeft="8dp"
-                            android:layout_marginTop="@dimen/_15sdp"
+                            android:layout_marginTop="@dimen/_7sdp"
                             android:text="Repetition"
                             android:textColor="@color/white"
                             android:textStyle="bold"
@@ -545,6 +556,35 @@
                         android:buttonTint="?attr/image_tint_color"
                         android:text="Check if you want to hear the word percent at the end."
                         android:textColor="@color/white" />
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="0.03dp"
+                        android:layout_marginTop="@dimen/_4sdp"
+                        android:layout_marginBottom="@dimen/_4sdp"
+                        android:background="@color/white" />
+
+                    <RadioGroup
+                        android:id="@+id/radioGroup_percentAnnounceOption"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <RadioButton
+                            android:id="@+id/radioButton_announcePercentRange"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:buttonTint="?attr/image_tint_color"
+                            android:text="Announce base on percentage range"
+                            android:textColor="@color/white" />
+
+                        <RadioButton
+                            android:id="@+id/radioButton_announceExactPercent"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:buttonTint="?attr/image_tint_color"
+                            android:text="Announce exact percentage"
+                            android:textColor="@color/white" />
+                    </RadioGroup>
                 </LinearLayout>
 
                 <Button

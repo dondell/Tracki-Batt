@@ -210,11 +210,12 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:gravity="center_horizontal"
-                    android:text="Charging time:"
+                    android:text="-- : --"
                     android:textColor="@color/white"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/textView_chargingSpeed" />
+                    app:layout_constraintTop_toBottomOf="@+id/textView_chargingSpeed"
+                    tools:text="Charging time:" />
 
             </androidx.constraintlayout.widget.ConstraintLayout>
         </ScrollView>

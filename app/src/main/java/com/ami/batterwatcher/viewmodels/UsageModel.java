@@ -18,6 +18,7 @@ public class UsageModel implements Parcelable {
     public float avg_mAh; //this is the current mAh usage of the device
     public float capacity_mAh; //this is the capacity of the device in mAh
     public float current_battery_percent; //this is the current battery percentage of the device
+    public long timeDuration;
 
     public UsageModel() {
     }

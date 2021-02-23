@@ -10,11 +10,7 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.util.Log;
 
-import androidx.lifecycle.Observer;
-import androidx.lifecycle.ViewModelProvider;
-
 import com.ami.batterwatcher.base.BaseActivity;
-import com.ami.batterwatcher.data.usage.UsageViewModel;
 import com.ami.batterwatcher.viewmodels.UsageModel;
 
 import java.util.ArrayList;
@@ -22,6 +18,7 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import static android.app.AppOpsManager.MODE_ALLOWED;
@@ -149,12 +146,43 @@ public class UsagePresenter implements UsageContract.Presenter {
                         usageModel = um;
                     }
                 }
-                return new UsageStatsWrapper(
+
+                UsageStatsWrapper usw = new UsageStatsWrapper(
                         usageStats,
                         packageManager.getApplicationIcon(ai),
                         packageManager.getApplicationLabel(ai).toString(),
                         usageStats.getPackageName(),
                         usageModel);
+
+                if (usw.usageModel != null) {
+                    // total capacity mAh * battery percent / 100 to get remaining capacity mAh
+                    //float remainingCap = (usw.usageModel.capacity_mAh * usw.usageModel.current_battery_percent / 100.0f);
+                    // remaining capacity mAh(base on battery percentage) e.g 50% /(divide) hour remaining
+                    int hourRemaining = context.store.getInt(BaseActivity.remainingTimeForBatteryToDrainOrChargeHr);
+                    //int mnRemaining = context.store.getInt(BaseActivity.remainingTimeForBatteryToDrainOrChargeMn);
+                    //float perHour_mAhUsage = remainingCap / hourRemaining;
+                    // get percentage of app usage per hour
+                    //float app_discharging_speed = (usageModel.mAh / perHour_mAhUsage) * 100;
+                    //float app_discharging_speed = ((usw.usageModel.mAh / usw.usageModel.capacity_mAh) * 100.0f);
+
+
+                    //avg mAh |    hours usage	   |     mAh usage	     |   mAh percentage used
+                    //  300       0.083 = (5/60)       300 * 0.083 = 25        =(25/3300)*100
+                    long totalTimeForeground = usw.getUsageStats() != null ?
+                            usw.getUsageStats().getTotalTimeInForeground() : 0;
+                    float app_percentage_used = (
+                            (usw.usageModel.mAh * (totalTimeForeground / 3600000.0f))
+                                    / usw.usageModel.capacity_mAh) * 100.0f;
+
+                    /*usw.speedComputation = String.format(Locale.US, "%.2f%%/h, %s mAh",
+                            (app_discharging_speed > 100 ? 100 : app_discharging_speed), usw.usageModel.mAh);*/
+                    usw.usageComputation = String.format(Locale.US, "%.2f%%, %s mAh",
+                            app_percentage_used, usw.usageModel.mAh);
+                    usw.percentage = app_percentage_used;
+                    usw.usageModel.percentage = app_percentage_used;
+                }
+
+                return usw;
             }
 
         } catch (PackageManager.NameNotFoundException e) {

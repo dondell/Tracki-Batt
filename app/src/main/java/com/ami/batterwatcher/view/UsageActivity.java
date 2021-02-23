@@ -1,9 +1,10 @@
 package com.ami.batterwatcher.view;
 
 import android.app.usage.EventStats;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
-import android.os.AsyncTask;
+import android.net.Uri;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -59,19 +60,20 @@ public class UsageActivity extends BaseActivity implements UsageContract.View {
     @Override
     protected void setViews() {
         showBackButton(true);
-        setTitle("Apps Usage");
+        setTitle("Apps Battery consumption");
         RecyclerView recyclerView = findViewById(R.id.recyclerview);
         progressBar = findViewById(R.id.progress_bar);
         permissionMessage = findViewById(R.id.grant_permission_message);
 
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         adapter = new UsageStatAdapter(this);
+        adapter.setHasStableIds(true);
         recyclerView.setAdapter(adapter);
     }
 
     @Override
     protected void setListeners() {
-        permissionMessage.setOnClickListener(v -> openSettings());
+        permissionMessage.setOnClickListener(v -> showUsagePermissionTutorial());
         usageViewModel = new ViewModelProvider
                 .AndroidViewModelFactory(getApplication())
                 .create(UsageViewModel.class);
@@ -130,6 +132,7 @@ public class UsageActivity extends BaseActivity implements UsageContract.View {
                 showProgressBar(false);
                 permissionMessage.setVisibility(GONE);
                 adapter.setList(list);
+                adapter.notifyDataSetChanged();
             }
         });
     }

@@ -19,18 +19,25 @@ public class UsageStatAdapter extends RecyclerView.Adapter<UsageStatVH> {
 
     public UsageStatAdapter(BaseActivity baseActivity){
         this.baseActivity = baseActivity;
-        list = new ArrayList<>();
+        this.list = new ArrayList<>();
     }
 
     @Override
     public UsageStatVH onCreateViewHolder(ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_usage_stat, parent, false);
+        LayoutInflater layoutInflater = LayoutInflater.from(baseActivity);
+        View view = layoutInflater.inflate(R.layout.item_usage_stat, parent, false);
         return new UsageStatVH(view, baseActivity);
     }
 
     @Override
     public void onBindViewHolder(UsageStatVH holder, int position) {
         holder.bindTo(list.get(position));
+        holder.setIsRecyclable(false);
+    }
+
+    @Override
+    public long getItemId(int position) {
+        return position;
     }
 
     @Override
@@ -40,6 +47,5 @@ public class UsageStatAdapter extends RecyclerView.Adapter<UsageStatVH> {
 
     public void setList(List<UsageStatsWrapper> list) {
         this.list = list;
-        notifyDataSetChanged();
     }
 }

@@ -59,7 +59,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginLeft="8dp"
                         android:layout_marginTop="@dimen/_4sdp"
-                        android:text="Set a service suspension interval"
+                        android:text="Set the hours time frame the app will go to sleep and will not announce"
                         android:textColor="@color/black"
                         android:textSize="@dimen/_10sdp"
                         app:layout_constraintStart_toStartOf="parent"
@@ -68,7 +68,6 @@
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/_15sdp"
                         android:gravity="center_vertical"
                         android:orientation="horizontal"
                         android:padding="@dimen/_8sdp"
