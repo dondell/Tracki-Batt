@@ -117,7 +117,7 @@ public class MainActivity extends BaseActivity {
         listAdapter = new AlertListAdapter(this, models, new AlertListAdapter.ClickListener() {
             @Override
             public void onClick(int position) {
-                Intent addIntent = new Intent(MainActivity.this, AlertDetailsActivity.class);
+                Intent addIntent = new Intent(MainActivity.this, ChargingOrDischargingActivity.class);
                 addIntent.putExtra("screen_type", 2);
                 addIntent.putExtra("data", models.get(position));
                 startActivity(addIntent);
@@ -200,7 +200,7 @@ public class MainActivity extends BaseActivity {
         });
 
         viewDataBinding.includeCharging.getRoot().setOnClickListener(view -> {
-            Intent addIntent = new Intent(MainActivity.this, AlertDetailsActivity.class);
+            Intent addIntent = new Intent(MainActivity.this, ChargingOrDischargingActivity.class);
             addIntent.putExtra("screen_type", 3);
             if (chargeModels.size() > 0)
                 addIntent.putExtra("data", chargeModels.get(0));
@@ -208,7 +208,7 @@ public class MainActivity extends BaseActivity {
         });
 
         viewDataBinding.includeDischarging.getRoot().setOnClickListener(view -> {
-            Intent addIntent = new Intent(MainActivity.this, AlertDetailsActivity.class);
+            Intent addIntent = new Intent(MainActivity.this, ChargingOrDischargingActivity.class);
             addIntent.putExtra("screen_type", 4);
             if (chargeModels.size() > 0)
                 addIntent.putExtra("data", chargeModels.get(1));
@@ -427,9 +427,9 @@ public class MainActivity extends BaseActivity {
 
         //Get stored battery value and compare it on the current value
         int storedPreviousBatLevel = store.getInt(previousBatValueKey, -1);
-        log("rawLevel:" + currentBattLevel +
+        /*log("rawLevel:" + currentBattLevel +
                 " scale:" + store.getInt(bat_scale) + " status:" + store.getInt(bat_status) +
-                " storedPreviousBatLevel:" + storedPreviousBatLevel);
+                " storedPreviousBatLevel:" + storedPreviousBatLevel);*/
         //If no stored battery value, then save the current battery level
         if (storedPreviousBatLevel == -1) {
             store.setInt(previousBatValueKey, currentBattLevel);

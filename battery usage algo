@@ -1,0 +1,21 @@
+discharge startime  
+					done - when charger is unplugged
+					done - save start time of discharge
+
+List down foreground apps - Save open/closing time for each app
+
+Battery Service 
+				done - track each percentage decrement
+				done - save timeStart when app open
+				done - save timeStop when app closes
+				- example: If it decrement from 100% to %90
+					- get list of the app
+						- iterate each app
+						- get time usage by timeout minus timein = total usage
+							- get time duration from previous percent to current percent
+							- save percentage base on that total time on previous step
+							- save mAh also
+								- get mAh consumed on 1 percentage decrement
+					- other usage is consumed by services
+
+

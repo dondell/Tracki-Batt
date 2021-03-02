@@ -22,6 +22,7 @@ import android.speech.tts.TextToSpeech;
 import android.speech.tts.UtteranceProgressListener;
 import android.speech.tts.Voice;
 import android.text.TextUtils;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
@@ -34,6 +35,7 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import com.ami.batterwatcher.R;
 import com.ami.batterwatcher.base.BaseActivity;
 import com.ami.batterwatcher.data.ChargeViewModel;
+import com.ami.batterwatcher.data.UsageWithCurrentSamplings;
 import com.ami.batterwatcher.data.usage.ChargingSampleViewModel;
 import com.ami.batterwatcher.data.usage.DischargingSampleViewModel;
 import com.ami.batterwatcher.data.usage.UsageViewModel;
@@ -87,6 +89,8 @@ import static com.ami.batterwatcher.base.BaseActivity.checkModifyMaxVolumePermis
 import static com.ami.batterwatcher.base.BaseActivity.disChargingSampleId;
 import static com.ami.batterwatcher.base.BaseActivity.disableAlertDuringCall;
 import static com.ami.batterwatcher.base.BaseActivity.dischargingAnnouncePercentExactValue;
+import static com.ami.batterwatcher.base.BaseActivity.dischargingStartLevel;
+import static com.ami.batterwatcher.base.BaseActivity.dischargingStartTime;
 import static com.ami.batterwatcher.base.BaseActivity.enableRepeatedAlertForPercentageForCharging;
 import static com.ami.batterwatcher.base.BaseActivity.enableRepeatedAlertForPercentageForDisCharging;
 import static com.ami.batterwatcher.base.BaseActivity.ignoreSystemAudioProfile;
@@ -125,6 +129,7 @@ public class BatteryService extends Service {
     private int maxMusicVolume, maxRingVolume;
     private List<ChargeWithPercentageModel> chargeWithPercentageModels;
     private IBinder mBinder = new LocalBinder();
+    private NotificationManager notificationManager;
     private BatteryManager myBatteryManager;
     private BatteryUtil batteryUtil;
     private AppChecker appChecker;
@@ -138,8 +143,15 @@ public class BatteryService extends Service {
     private UsageViewModel usageViewModel;
     private ChargingSampleViewModel chargingSampleViewModel;
     private DischargingSampleViewModel dischargingSampleViewModel;
+    public static long dischargingStartTimeCopy;
 
     private int mTempPreviousBatValueKey;
+    /**
+     * appsWithUsage
+     * Saving each app usage when discharging
+     */
+    private boolean doneSavingDischargingStartTime = false;
+    private List<UsageWithCurrentSamplings> appsWithUsage = new ArrayList<>();
 
     /**
      * Lists to store the tracked data for calculating charging and discharging time.
@@ -147,11 +159,10 @@ public class BatteryService extends Service {
     //private ArrayList<Long> batteryDischargingTimes, batteryChargingTimes;
     private LiveData<List<ChargingSampleModel>> chargeSampleList;
     private LiveData<List<DischargingSampleModel>> dischargeSampleList;
-    private List<Integer> appCurrentSampling = new ArrayList<>();
     /**
      * A broadcast receiver for tracking the level changes and the battery usage.
      */
-    private BroadcastReceiver batInfoReceiver = new BroadcastReceiver() {
+    private final BroadcastReceiver batInfoReceiver = new BroadcastReceiver() {
         int oldDischargeLevel = 101, oldChargeLevel = 0;
         long oldDischargeTime = 0, oldChargeTime = 0;
 
@@ -206,9 +217,81 @@ public class BatteryService extends Service {
             }
 
             boolean charging = BaseActivity.isCharging(getApplicationContext());
-            if ((!charging) && (level <= 100)) {
+            if (!charging && level <= 100) {
 
+                if (!doneSavingDischargingStartTime) {
+                    dischargingStartTimeCopy = System.currentTimeMillis();
+                    store.saveLong(dischargingStartTime, dischargingStartTimeCopy);
+                    store.saveString(dischargingStartLevel, "" + level);
+                    doneSavingDischargingStartTime = true;
+                }
+
+                //Track each draining decrements
                 if (level < oldDischargeLevel) {
+                    logStatic("draining from " + oldDischargeLevel + " to " + level);
+
+                    //We save the apps that are using the current percentage
+                    int sizeOfAppsWhoUseCurrentLevel = appsWithUsage.size();
+                    long totalDurationOfAppsWhoUseCurrentLevel = 0L;
+                    //Sum up all time durations use for each app
+                    for (int i = 0; i < appsWithUsage.size(); i++) {
+                        UsageWithCurrentSamplings um = appsWithUsage.get(i);
+                        /*- example: If it decrement from 100% to %90
+                                - get list of the app
+                        - iterate each app
+                        - get time duration from previous percent to current percent
+                        */
+                        if (um.usageModel.timeDuration > 0) {
+                            totalDurationOfAppsWhoUseCurrentLevel =
+                                    totalDurationOfAppsWhoUseCurrentLevel + um.usageModel.timeDuration;
+                        } else {
+                            totalDurationOfAppsWhoUseCurrentLevel =
+                                    totalDurationOfAppsWhoUseCurrentLevel + (System.currentTimeMillis() - um.usageModel.timeStart);
+                            um.usageModel.timeDuration = System.currentTimeMillis() - um.usageModel.timeStart;
+                            appsWithUsage.set(i, um);
+                        }
+                    }
+
+                    List<UsageWithCurrentSamplings> copyUsage = new ArrayList<>(appsWithUsage);
+                    for (UsageWithCurrentSamplings um2 : copyUsage) {
+                        /*- save percentage base on that total time on previous step
+                                - save mAh also
+                        - get mAh consumed on 1 percentage decrement*/
+                        um2.usageModel.percentage = (float) um2.usageModel.timeDuration / totalDurationOfAppsWhoUseCurrentLevel;
+                        if (Float.isNaN(um2.usageModel.percentage))
+                            um2.usageModel.percentage = 0.0f;
+                        um2.usageModel.mAh = 0.0f;
+                        um2.usageModel.current_mAh = 0.0f;
+
+                        //get average app current and make it as final app mAh
+                        int appAvgCurr = 0;
+                        for (int curr : um2.appCurrentSampling) {
+                            appAvgCurr = appAvgCurr + curr;
+                        }
+                        if (appAvgCurr > 0) {
+                            um2.usageModel.current_beforeLaunch = (float) appAvgCurr / um2.appCurrentSampling.size();
+                        } else {
+                            um2.usageModel.current_beforeLaunch = currentBeforeAppOnForeground;
+                        }
+                        um2.usageModel.current_mAh = store.getInt(bat_current);
+                        um2.usageModel.avg_mAh = store.getInt(bat_current_avg);
+                        um2.usageModel.capacity_mAh = store.getInt(bat_capacity);
+                        um2.usageModel.current_battery_percent = store.getInt(bat_level);
+                        if (um2.usageModel.current_beforeLaunch > um2.usageModel.current_mAh) {
+                            /*means currentB4 launch is positive and current_mAh is negative
+                            before launch = 100, after launch  = -200*/
+                            if (um2.usageModel.current_beforeLaunch > 0 && um2.usageModel.current_mAh < 0)
+                                um2.usageModel.mAh = Math.abs((int) um2.usageModel.current_beforeLaunch - (int) um2.usageModel.current_mAh);
+                            else if (um2.usageModel.current_beforeLaunch > 0 && um2.usageModel.current_mAh > 0)
+                                um2.usageModel.mAh = (int) Math.abs(um2.usageModel.current_beforeLaunch) - (int) um2.usageModel.current_mAh;
+                            else if (um2.usageModel.current_beforeLaunch < 0 && um2.usageModel.current_mAh < 0)
+                                um2.usageModel.mAh = (int) Math.abs(um2.usageModel.current_mAh) - (int) Math.abs(um2.usageModel.current_beforeLaunch);
+                        }
+
+                        usageViewModel.insert(um2.usageModel);
+                    }
+                    //Clear the list to start tracking to new list of apps for the current percentage battery level
+                    appsWithUsage.clear();
 
                     long time = System.currentTimeMillis();
                     if (oldDischargeTime != 0) {
@@ -232,6 +315,7 @@ public class BatteryService extends Service {
             }
 
             if (charging) {
+                doneSavingDischargingStartTime = false;
 
                 if (oldChargeLevel < level) {
 
@@ -277,15 +361,9 @@ public class BatteryService extends Service {
             sampleIndex = 1;
 
         if (!charging) {
-            dischargingSampleViewModel
-                    .insert(new DischargingSampleModel(
-                            sampleIndex, diffTime
-                    ));
+            dischargingSampleViewModel.insert(new DischargingSampleModel(sampleIndex, diffTime));
         } else {
-            chargingSampleViewModel
-                    .insert(new ChargingSampleModel(
-                            sampleIndex, diffTime
-                    ));
+            chargingSampleViewModel.insert(new ChargingSampleModel(sampleIndex, diffTime));
         }
         logStatic("New sample found for " +
                 (charging ? "charging" : "discharging") + " at level " +
@@ -345,8 +423,8 @@ public class BatteryService extends Service {
     private void checkLoudBeepRules(int storedPreviousBatLevel) {
         if (!donePlayingLoadBeepBelowTenPercent &&
                 !BaseActivity.isCharging(getApplicationContext()) &&
-                store.getBoolean(playLoudBeepOnBelowTenPercent) &&
-                (int) currentBattLevel < 10
+                store.getBoolean(playLoudBeepOnBelowTenPercent)
+                && (int) currentBattLevel <= 15
                 && (int) currentBattLevel != storedPreviousBatLevel
         ) {
             donePlayingLoadBeepBelowTenPercent = true;
@@ -358,6 +436,7 @@ public class BatteryService extends Service {
     @Override
     public void onCreate() {
         logStatic("BatteryService is now created");
+        notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         myBatteryManager = (BatteryManager) getSystemService(Context.BATTERY_SERVICE);
         batteryUtil = new BatteryUtil();
         store = new PrefStore(this);
@@ -427,8 +506,8 @@ public class BatteryService extends Service {
         handler.removeCallbacks(checkBatteryStatusRunnable);
 
         stopForegroundChecker();
-        if (null != appUsageObserver)
-            usageModel.removeObserver(appUsageObserver);
+        /*if (null != appUsageObserver)
+            usageModel.removeObserver(appUsageObserver);*/
     }
 
     @Override
@@ -686,9 +765,9 @@ public class BatteryService extends Service {
         }
 
         //Logic to use settings exact percent or percent base on range
-        if (isCharging && store.getBoolean(chargingAnnouncePercentExactValue))
+        if (isCharging && store.getBoolean(chargingAnnouncePercentExactValue, true))
             percentage = (int) currentBattLevel;
-        if (!isCharging && store.getBoolean(dischargingAnnouncePercentExactValue))
+        if (!isCharging && store.getBoolean(dischargingAnnouncePercentExactValue, true))
             percentage = (int) currentBattLevel;
 
         String includePercentageAtTheEndStr = "";
@@ -706,9 +785,6 @@ public class BatteryService extends Service {
     }
 
     private void playLoadBeep() {
-        NotificationManager notificationManager =
-                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-
         boolean notifPermissionGranted = true;
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
@@ -738,6 +814,9 @@ public class BatteryService extends Service {
                 }
             });
             mp.start();
+            //Toast.makeText(getApplicationContext(), "Playing loud beep ", Toast.LENGTH_LONG);
+        } else {
+            //Toast.makeText(getApplicationContext(), "Can't play loud beep", Toast.LENGTH_LONG);
         }
     }
 
@@ -772,10 +851,10 @@ public class BatteryService extends Service {
     private void onDischargeTimePublish(int days, int hours, int mins) {
         if (days == 0) {
             store.saveString(remainingTimeForBatteryToDrainOrCharge,
-                    String.format(Locale.US, "Discharging time: %sh %sm", hours, mins));
+                    String.format(Locale.US, "Estimated battery life: %sh %sm", hours, mins));
         } else {
             store.saveString(remainingTimeForBatteryToDrainOrCharge,
-                    String.format(Locale.US, "Discharging time: %sd %sh %sm", days, hours, mins));
+                    String.format(Locale.US, "Estimated battery life: %sd %sh %sm", days, hours, mins));
         }
         store.setInt(remainingTimeForBatteryToDrainOrChargeDy, days);
         store.setInt(remainingTimeForBatteryToDrainOrChargeHr, hours);
@@ -868,17 +947,13 @@ public class BatteryService extends Service {
         appChecker
                 .when(getPackageName(), packageName -> {
                     packageDetected = packageName;
-                    observer(packageName);
-
+                    foregroundObserver(packageName);
                     //if (!lastPackageDetected.equals(packageName))
                     //Toast.makeText(getBaseContext(), "Our app is in the foreground.", Toast.LENGTH_SHORT).show();
                 })
                 .whenOther(packageName -> {
-                    observer(packageName);
-
+                    foregroundObserver(packageName);
                     //Toast.makeText(getBaseContext(), "Foreground: " + packageName, Toast.LENGTH_SHORT).show();
-                    //}
-
                 })
                 .timeout(5000)
                 .start(this);
@@ -888,71 +963,68 @@ public class BatteryService extends Service {
         appChecker.stop();
     }
 
-    private void observer(String packageName) {
+    private void foregroundObserver(String packageName) {
         packageDetected = packageName;
         //Get only current in mAh only once per app but exception below
-        if (!lastPackageDetected.equals(packageName)) {
+        if (!BaseActivity.isCharging(getApplicationContext()) &&
+                !packageDetected.equals(lastPackageDetected)) {
             currentBeforeAppOnForeground = store.getInt(bat_current);
-            appCurrentSampling.clear();
-            appCurrentSampling.add(currentBeforeAppOnForeground);
+
+            //Check if there's existing app usage, then only update the timeDuration
+            int appsWithUsageSize = appsWithUsage.size();
+            boolean hasFoundExistingAppUsage = false;
+            for (int i = 0; i < appsWithUsageSize; i++) {
+                UsageModel um = appsWithUsage.get(i).usageModel;
+                if (packageDetected.equalsIgnoreCase(um.packageName)) {
+                    hasFoundExistingAppUsage = true;
+                    um.timeDuration = um.timeDuration + (System.currentTimeMillis() - um.timeStart);
+                    um.timeStart = System.currentTimeMillis();
+                    appsWithUsage.set(i, new UsageWithCurrentSamplings(um));
+                    logStatic("Updating app details " + new Gson().toJson(um));
+                }
+            }
+
+            //When app first launch
+            if (!hasFoundExistingAppUsage) {
+                //It is the current foreground app. Save data on beginning of foreground.
+                UsageModel appUsageModel = new UsageModel();
+                appUsageModel.packageName = packageDetected;
+                appUsageModel.timeStart = System.currentTimeMillis();
+                appUsageModel.timeEnd = 0;
+                appUsageModel.timeDuration = 0;
+                appsWithUsage.add(new UsageWithCurrentSamplings(appUsageModel));
+                logStatic("Adding new app start details " + new Gson().toJson(appUsageModel));
+            } else {
+                //When app closes. Update usageModel and add end data when app closes, only if there's match to the lastPackage
+                int appsWithUsageSize2 = appsWithUsage.size();
+                for (int i = 0; i < appsWithUsageSize2; i++) {
+                    UsageModel um = appsWithUsage.get(i).usageModel;
+                    if (lastPackageDetected.equalsIgnoreCase(um.packageName)) {
+                        um.timeEnd = System.currentTimeMillis();
+                        //- get time usage by timeEnd minus timeStart = total usage
+                        um.timeDuration = um.timeDuration + (um.timeEnd - um.timeStart);
+                        um.percentage = 0;
+                        appsWithUsage.set(i, new UsageWithCurrentSamplings(um));
+                        logStatic("Adding app end details " + new Gson().toJson(um));
+                    }
+                }
+            }
         }
 
         //if bat_current is less than the currentBeforeAppOnForeground, then add to app current sampling
-        if (lastPackageDetected.equalsIgnoreCase(packageName) && currentBeforeAppOnForeground < store.getInt(bat_current)) {
+        if (lastPackageDetected.equalsIgnoreCase(packageDetected)
+                && currentBeforeAppOnForeground < store.getInt(bat_current)) {
             currentBeforeAppOnForeground = store.getInt(bat_current);
-            appCurrentSampling.add(currentBeforeAppOnForeground);
+            int size = appsWithUsage.size();
+            for (int i = 0; i < size; i++) {
+                UsageWithCurrentSamplings usageWithCurrentSamplings = appsWithUsage.get(i);
+                if (usageWithCurrentSamplings.usageModel.packageName.equalsIgnoreCase(packageDetected)) {
+                    usageWithCurrentSamplings.appCurrentSampling.add(currentBeforeAppOnForeground);
+                }
+            }
         }
 
         lastPackageDetected = packageName;
-
-        handler.postDelayed(() -> {
-            usageModel = usageViewModel.findUsage(packageName);
-            usageModel.observeForever(appUsageObserver);
-        }, 4000);
-
     }
-
-    Observer<UsageModel> appUsageObserver = new Observer<UsageModel>() {
-        @Override
-        public void onChanged(@Nullable UsageModel um) {
-            if (um != null) {
-                logStatic(lastPackageDetected + " is now saved");
-            } else {
-                logStatic(packageDetected + " is not saved yet");
-                um = new UsageModel();
-            }
-            usageModel.removeObserver(appUsageObserver);
-
-            um.packageName = packageDetected;
-            //get average app current and make it as final app mAh
-            int appAvgCurr = 0;
-            for (int curr : appCurrentSampling) {
-                appAvgCurr = appAvgCurr + curr;
-            }
-            if (appAvgCurr > 0) {
-                um.current_beforeLaunch = (float) appAvgCurr / appCurrentSampling.size();//currentBeforeAppOnForeground;
-            } else {
-                um.current_beforeLaunch = currentBeforeAppOnForeground;
-            }
-            um.current_mAh = store.getInt(bat_current);
-            um.avg_mAh = store.getInt(bat_current_avg);
-            um.capacity_mAh = store.getInt(bat_capacity);
-            um.current_battery_percent = store.getInt(bat_level);
-            if (um.current_beforeLaunch > um.current_mAh) {
-                /*
-                means currentB4 launch is positive and current_mAh is negative
-                before launch = 100, after launch  = -200
-                 */
-                if (um.current_beforeLaunch > 0 && um.current_mAh < 0)
-                    um.mAh = Math.abs((int) um.current_beforeLaunch - (int) um.current_mAh);
-                else if (um.current_beforeLaunch > 0 && um.current_mAh > 0)
-                    um.mAh = (int) Math.abs(um.current_beforeLaunch) - (int) um.current_mAh;
-                else if (um.current_beforeLaunch < 0 && um.current_mAh < 0)
-                    um.mAh = (int) Math.abs(um.current_mAh) - (int) Math.abs(um.current_beforeLaunch);
-
-                usageViewModel.insert(um);
-            }
-        }
-    };
 
 }

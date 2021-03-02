@@ -109,6 +109,10 @@ public abstract class BaseActivity extends AppCompatActivity {
     public static final String remainingTimeForBatteryToDrainOrChargeHr = "remainingTimeForBatteryToDrainOrChargeHr"; //int
     public static final String remainingTimeForBatteryToDrainOrChargeMn = "remainingTimeForBatteryToDrainOrChargeMn"; //int
 
+    //discharging usage keys
+    public static final String dischargingStartTime = "dischargingStartTime"; //long
+    public static final String dischargingStartLevel = "dischargingStartLevel"; //String
+
     //Save charging samples
     public static final String chargingSampleId = "chargingSampleId"; //int
     //Save discharging samples
@@ -552,6 +556,18 @@ public abstract class BaseActivity extends AppCompatActivity {
             alertDialog.dismiss();
             startActivity(new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS));
         });
+    }
+
+    public void showDoNotDisturbPermissionTutorial(View.OnClickListener okListener) {
+        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
+        LayoutInflater inflater = this.getLayoutInflater();
+        View dialogView = inflater.inflate(R.layout.alert_dialog_donotdisturb_tutorial, null);
+        dialogBuilder.setView(dialogView);
+        Button button_ok = dialogView.findViewById(R.id.button_ok);
+        alertDialog = dialogBuilder.create();
+        if (!isFinishing())
+            alertDialog.show();
+        button_ok.setOnClickListener(okListener);
     }
 
 }

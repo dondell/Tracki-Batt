@@ -1,10 +1,8 @@
 package com.ami.batterwatcher.view;
 
 import android.app.usage.EventStats;
-import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
-import android.net.Uri;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -23,6 +21,7 @@ import com.ami.batterwatcher.R;
 import com.ami.batterwatcher.base.BaseActivity;
 import com.ami.batterwatcher.data.usage.UsageViewModel;
 import com.ami.batterwatcher.databinding.ActivityUsageListBinding;
+import com.ami.batterwatcher.usage.DateUtils;
 import com.ami.batterwatcher.usage.UsageContract;
 import com.ami.batterwatcher.usage.UsagePresenter;
 import com.ami.batterwatcher.usage.UsageStatAdapter;
@@ -30,6 +29,7 @@ import com.ami.batterwatcher.usage.UsageStatsWrapper;
 import com.ami.batterwatcher.viewmodels.UsageModel;
 
 import java.util.List;
+import java.util.Locale;
 
 import static android.view.View.GONE;
 import static android.view.View.VISIBLE;
@@ -61,6 +61,9 @@ public class UsageActivity extends BaseActivity implements UsageContract.View {
     protected void setViews() {
         showBackButton(true);
         setTitle("Apps Battery consumption");
+        viewDataBinding.textViewSessionStart.setText(String.format(Locale.US, "Session from: %s at %s",
+                DateUtils.formatStandardDateTime(store.getLong(dischargingStartTime)),
+                store.getString(dischargingStartLevel) + "%"));
         RecyclerView recyclerView = findViewById(R.id.recyclerview);
         progressBar = findViewById(R.id.progress_bar);
         permissionMessage = findViewById(R.id.grant_permission_message);

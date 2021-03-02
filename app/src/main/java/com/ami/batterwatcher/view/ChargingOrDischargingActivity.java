@@ -1,6 +1,10 @@
 package com.ami.batterwatcher.view;
 
+import android.app.NotificationManager;
 import android.content.Context;
+import android.content.Intent;
+import android.os.Build;
+import android.provider.Settings;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -24,7 +28,7 @@ import java.util.Locale;
 
 import static com.ami.batterwatcher.service.BatteryService.DEFAULT_CHECK_BATTERY_INTERVAL;
 
-public class AlertDetailsActivity extends BaseActivity {
+public class ChargingOrDischargingActivity extends BaseActivity {
 
     private ActivityItemDetailsBinding viewDataBinding;
     private AlertViewModel viewModel;
@@ -38,6 +42,7 @@ public class AlertDetailsActivity extends BaseActivity {
     private int menu_discharging = 4;
     private int chargeModelId = 0;
     private ChargeModel chargeModel;
+    private NotificationManager notificationManager;
 
     @Override
     protected int setLayout() {
@@ -67,6 +72,7 @@ public class AlertDetailsActivity extends BaseActivity {
 
     @Override
     protected void setData() {
+        notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         viewModel = new ViewModelProvider(this).get(AlertViewModel.class);
         chargeViewModel = new ViewModelProvider(this).get(ChargeViewModel.class);
         percentageViewModel = new ViewModelProvider(this).get(PercentageViewModel.class);
@@ -127,14 +133,31 @@ public class AlertDetailsActivity extends BaseActivity {
                         enableRepeatedAlertForPercentageForCharging :
                         enableRepeatedAlertForPercentageForDisCharging, true));
 
+        viewDataBinding.radioButtonAnnounceExactPercent.setChecked(
+                store.getBoolean(screen_type == 3 ?
+                                chargingAnnouncePercentExactValue : dischargingAnnouncePercentExactValue,
+                        true)
+        );
+
         viewDataBinding.radioButtonAnnouncePercentRange.setChecked(
                 store.getBoolean(screen_type == 3 ?
                         chargingAnnouncePercentBaseOnRange : dischargingAnnouncePercentBaseOnRange)
         );
-        viewDataBinding.radioButtonAnnounceExactPercent.setChecked(
-                store.getBoolean(screen_type == 3 ?
-                        chargingAnnouncePercentExactValue : dischargingAnnouncePercentExactValue)
-        );
+    }
+
+    @Override
+    protected void onPostResume() {
+        super.onPostResume();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+                && !notificationManager.isNotificationPolicyAccessGranted()) {
+            store.setBoolean(playLoudBeepOnBelowTenPercent, false);
+            viewDataBinding.checkboxPlayLoudBeepOnBelowTenPercent.setChecked(false);
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+                && notificationManager.isNotificationPolicyAccessGranted()) {
+            store.setBoolean(playLoudBeepOnBelowTenPercent, true);
+            viewDataBinding.checkboxPlayLoudBeepOnBelowTenPercent.setChecked(true);
+        }
     }
 
     private void setCheckBoxes(List<PercentageModel> list) {
@@ -196,7 +219,30 @@ public class AlertDetailsActivity extends BaseActivity {
                 percentageViewModel.insert(new PercentageModel(screen_type == 3 ? 12 : 24, 100, chargeModelId, b)));
 
         viewDataBinding.checkboxPlayLoudBeepOnBelowTenPercent.setOnCheckedChangeListener(((compoundButton, b) -> {
-            store.setBoolean(playLoudBeepOnBelowTenPercent, b);
+            if (b) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+                        && !notificationManager.isNotificationPolicyAccessGranted()) {
+                    store.setBoolean(playLoudBeepOnBelowTenPercent, false);
+                    showDoNotDisturbPermissionTutorial(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            if (null != alertDialog)
+                                alertDialog.dismiss();
+                            Intent intent = new Intent(android.provider.Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS);
+                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            startActivity(intent);
+                        }
+                    });
+                } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+                        && notificationManager.isNotificationPolicyAccessGranted()) {
+                    store.setBoolean(playLoudBeepOnBelowTenPercent, true);
+                } else {
+                    store.setBoolean(playLoudBeepOnBelowTenPercent, true);
+                }
+            } else {
+                store.setBoolean(playLoudBeepOnBelowTenPercent, false);
+            }
+
         }));
         viewDataBinding.checkboxAnnounceVerySlow.setOnCheckedChangeListener(((compoundButton, b) -> {
             store.setBoolean(screen_type == 3 ?

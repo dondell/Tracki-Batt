@@ -2,8 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     package="com.ami.batterwatcher"
-    android:versionCode="202102231"
-    android:versionName="1.0.45">
+    android:versionCode="202103023"
+    android:versionName="1.0.50">
 
     <uses-permission
         android:name="android.permission.PACKAGE_USAGE_STATS"
@@ -42,7 +42,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".view.AlertDetailsActivity"
+            android:name=".view.ChargingOrDischargingActivity"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="stateHidden" />
         <activity

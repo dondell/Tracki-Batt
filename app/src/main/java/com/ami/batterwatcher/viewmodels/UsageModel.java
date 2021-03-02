@@ -3,6 +3,7 @@ package com.ami.batterwatcher.viewmodels;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import androidx.annotation.NonNull;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 
@@ -11,6 +12,7 @@ public class UsageModel implements Parcelable {
     @PrimaryKey(autoGenerate = true)
     public long usageId;
     public String packageName;
+    @NonNull
     public float percentage;
     public float mAh; //this is the mAh added on top of the current mAh
     public float current_beforeLaunch; //this is the current mAh usage of the device before app launch
@@ -19,6 +21,8 @@ public class UsageModel implements Parcelable {
     public float capacity_mAh; //this is the capacity of the device in mAh
     public float current_battery_percent; //this is the current battery percentage of the device
     public long timeDuration;
+    public long timeStart;
+    public long timeEnd;
 
     public UsageModel() {
     }

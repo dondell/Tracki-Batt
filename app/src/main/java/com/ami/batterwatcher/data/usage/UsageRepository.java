@@ -1,13 +1,17 @@
 package com.ami.batterwatcher.data.usage;
 
 import android.app.Application;
+import android.util.Log;
 
 import androidx.lifecycle.LiveData;
 
 import com.ami.batterwatcher.data.AppDatabase;
 import com.ami.batterwatcher.viewmodels.UsageModel;
+import com.google.gson.Gson;
 
 import java.util.List;
+
+import static com.ami.batterwatcher.service.BatteryService.dischargingStartTimeCopy;
 
 class UsageRepository {
 
@@ -21,12 +25,12 @@ class UsageRepository {
     UsageRepository(Application application) {
         AppDatabase db = AppDatabase.getDatabase(application);
         mUsageDao = db.usageDao();
-        mAllAlerts = mUsageDao.getAll();
+        mAllAlerts = mUsageDao.getAllBaseDischargingSession(dischargingStartTimeCopy);
     }
 
     // Room executes all queries on a separate thread.
     // Observed LiveData will notify the observer when the data has changed.
-    LiveData<List<UsageModel>> getAll() {
+    LiveData<List<UsageModel>> getAllBaseDischargingSession() {
         return mAllAlerts;
     }
 

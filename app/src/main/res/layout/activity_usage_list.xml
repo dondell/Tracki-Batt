@@ -14,6 +14,17 @@
         android:layout_marginBottom="@dimen/_8sdp"
         tools:context=".view.UsageActivity">
 
+        <TextView
+            android:id="@+id/textView_sessionStart"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:text="Session start: March 01, 2021 3:00 PM"
+            app:layout_constraintTop_toTopOf="@+id/activity_main"
+            android:layout_width="0dp"
+            android:gravity="center_horizontal"
+            android:background="@color/orange"
+            android:layout_height="wrap_content"/>
+
         <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
             android:id="@+id/swiperefresh"
             android:layout_width="0dp"
@@ -21,7 +32,7 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
+            app:layout_constraintTop_toBottomOf="@id/textView_sessionStart">
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/recyclerview"

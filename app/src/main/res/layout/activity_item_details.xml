@@ -243,6 +243,34 @@
                             app:layout_constraintStart_toStartOf="@+id/checkbox_30"
                             app:layout_constraintTop_toBottomOf="@+id/checkbox_30" />
 
+                        <RadioGroup
+                            android:id="@+id/radioGroup_percentAnnounceOption"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            app:layout_constraintEnd_toEndOf="@+id/checkbox_3"
+                            app:layout_constraintStart_toStartOf="@+id/checkbox_20"
+                            app:layout_constraintTop_toBottomOf="@id/checkbox_3">
+
+                            <RadioButton
+                                android:id="@+id/radioButton_announceExactPercent"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:buttonTint="?attr/image_tint_color"
+                                android:text="Announce exact percentage"
+                                android:textColor="@color/white"
+                                tools:checked="true" />
+
+                            <RadioButton
+                                android:id="@+id/radioButton_announcePercentRange"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:buttonTint="?attr/image_tint_color"
+                                android:text="Announce base on percentage range"
+                                android:textColor="@color/white" />
+
+
+                        </RadioGroup>
+
                         <CheckBox
                             android:id="@+id/checkbox_playLoudBeepOnBelowTenPercent"
                             android:layout_width="0dp"
@@ -252,7 +280,7 @@
                             android:textColor="@color/white"
                             app:layout_constraintEnd_toEndOf="@+id/checkbox_3"
                             app:layout_constraintStart_toStartOf="@+id/checkbox_20"
-                            app:layout_constraintTop_toBottomOf="@+id/checkbox_20" />
+                            app:layout_constraintTop_toBottomOf="@+id/radioGroup_percentAnnounceOption" />
 
                     </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -557,34 +585,6 @@
                         android:text="Check if you want to hear the word percent at the end."
                         android:textColor="@color/white" />
 
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="0.03dp"
-                        android:layout_marginTop="@dimen/_4sdp"
-                        android:layout_marginBottom="@dimen/_4sdp"
-                        android:background="@color/white" />
-
-                    <RadioGroup
-                        android:id="@+id/radioGroup_percentAnnounceOption"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content">
-
-                        <RadioButton
-                            android:id="@+id/radioButton_announcePercentRange"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:buttonTint="?attr/image_tint_color"
-                            android:text="Announce base on percentage range"
-                            android:textColor="@color/white" />
-
-                        <RadioButton
-                            android:id="@+id/radioButton_announceExactPercent"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:buttonTint="?attr/image_tint_color"
-                            android:text="Announce exact percentage"
-                            android:textColor="@color/white" />
-                    </RadioGroup>
                 </LinearLayout>
 
                 <Button

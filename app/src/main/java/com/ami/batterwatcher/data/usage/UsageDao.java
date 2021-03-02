@@ -14,8 +14,23 @@ import java.util.List;
 
 @Dao
 public interface UsageDao {
-    @Query("SELECT * FROM usagemodel")
+    @Query("SELECT *, SUM(percentage) FROM usagemodel")
     LiveData<List<UsageModel>> getAll();
+
+    @Query("SELECT usageId, " +
+            "packageName, " +
+            "SUM(percentage) AS percentage, " +
+            "AVG(mAh) AS mAh, " +
+            "current_beforeLaunch, " +
+            "current_mAh, " +
+            "avg_mAh, " +
+            "capacity_mAh, " +
+            "current_battery_percent, " +
+            "SUM(timeDuration) AS timeDuration, " +
+            "timeStart, " +
+            "timeEnd " +
+            " FROM usagemodel WHERE timeStart >= :dischargingStartTime GROUP BY packageName")
+    LiveData<List<UsageModel>> getAllBaseDischargingSession(long dischargingStartTime);
 
     @Query("SELECT * FROM usagemodel WHERE usageId IN (:userIds)")
     List<UsageModel> loadAllByIds(int[] userIds);

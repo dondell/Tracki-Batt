@@ -25,7 +25,7 @@ import java.util.concurrent.Executors;
 @Database(entities = {
         AlertModel.class, ChargeModel.class, PercentageModel.class, UsageModel.class,
         ChargingSampleModel.class, DischargingSampleModel.class
-}, version = 7)
+}, version = 8)
 public abstract class AppDatabase extends RoomDatabase {
     public abstract AlertDao userDao();
 
@@ -57,6 +57,7 @@ public abstract class AppDatabase extends RoomDatabase {
                             .addMigrations(MIGRATION_4_5)
                             .addMigrations(MIGRATION_5_6)
                             .addMigrations(MIGRATION_6_7)
+                            .addMigrations(MIGRATION_7_8)
                             .build();
                 }
             }
@@ -203,6 +204,14 @@ public abstract class AppDatabase extends RoomDatabase {
         @Override
         public void migrate(@NonNull SupportSQLiteDatabase database) {
             database.execSQL("ALTER TABLE usagemodel ADD COLUMN timeDuration INTEGER NOT NULL DEFAULT 1");
+        }
+    };
+
+    static final Migration MIGRATION_7_8 = new Migration(7, 8) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("ALTER TABLE usagemodel ADD COLUMN timeStart INTEGER NOT NULL DEFAULT 1");
+            database.execSQL("ALTER TABLE usagemodel ADD COLUMN timeEnd INTEGER NOT NULL DEFAULT 1");
         }
     };
 

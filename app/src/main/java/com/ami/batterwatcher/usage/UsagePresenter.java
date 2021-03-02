@@ -158,7 +158,7 @@ public class UsagePresenter implements UsageContract.Presenter {
                     // total capacity mAh * battery percent / 100 to get remaining capacity mAh
                     //float remainingCap = (usw.usageModel.capacity_mAh * usw.usageModel.current_battery_percent / 100.0f);
                     // remaining capacity mAh(base on battery percentage) e.g 50% /(divide) hour remaining
-                    int hourRemaining = context.store.getInt(BaseActivity.remainingTimeForBatteryToDrainOrChargeHr);
+                    //int hourRemaining = context.store.getInt(BaseActivity.remainingTimeForBatteryToDrainOrChargeHr);
                     //int mnRemaining = context.store.getInt(BaseActivity.remainingTimeForBatteryToDrainOrChargeMn);
                     //float perHour_mAhUsage = remainingCap / hourRemaining;
                     // get percentage of app usage per hour
@@ -168,18 +168,18 @@ public class UsagePresenter implements UsageContract.Presenter {
 
                     //avg mAh |    hours usage	   |     mAh usage	     |   mAh percentage used
                     //  300       0.083 = (5/60)       300 * 0.083 = 25        =(25/3300)*100
-                    long totalTimeForeground = usw.getUsageStats() != null ?
+                    /*long totalTimeForeground = usw.getUsageStats() != null ?
                             usw.getUsageStats().getTotalTimeInForeground() : 0;
                     float app_percentage_used = (
                             (usw.usageModel.mAh * (totalTimeForeground / 3600000.0f))
-                                    / usw.usageModel.capacity_mAh) * 100.0f;
+                                    / usw.usageModel.capacity_mAh) * 100.0f;*/
 
                     /*usw.speedComputation = String.format(Locale.US, "%.2f%%/h, %s mAh",
                             (app_discharging_speed > 100 ? 100 : app_discharging_speed), usw.usageModel.mAh);*/
                     usw.usageComputation = String.format(Locale.US, "%.2f%%, %s mAh",
-                            app_percentage_used, usw.usageModel.mAh);
-                    usw.percentage = app_percentage_used;
-                    usw.usageModel.percentage = app_percentage_used;
+                            usw.usageModel.percentage, usw.usageModel.mAh);
+                    usw.percentage = usw.usageModel.percentage;
+                    //usw.usageModel.percentage = app_percentage_used;
                 }
 
                 return usw;

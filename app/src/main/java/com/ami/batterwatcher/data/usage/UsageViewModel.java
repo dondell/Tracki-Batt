@@ -18,7 +18,7 @@ public class UsageViewModel extends AndroidViewModel {
     public UsageViewModel(Application application) {
         super(application);
         mRepository = new UsageRepository(application);
-        mAllUsages = mRepository.getAll();
+        mAllUsages = mRepository.getAllBaseDischargingSession();
     }
 
     public LiveData<List<UsageModel>> getAll() {
